@@ -796,12 +796,7 @@ Lang_Configuration () {
 					--msgbox "\nSomething went wrong while restarting nginx service.\nPlease read $web_service_stderr_log and $Error_lang_service" 8 78
 					exit 1
 				fi
-				else
-					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nThere was a problem with sed command on \"$php_fpm_conf\" file" 8 78
-					exit 1
-				fi
-
+				
 			else
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nCould not detect a running web server, please make sure apache or nginx is running." 8 78
