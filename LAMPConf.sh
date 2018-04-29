@@ -16,7 +16,7 @@ Root_Check () {		## checks that the script runs as root
 
 Log_And_Variables () {		## set log path and variables for installation logs, makes sure whether log folder exists and if not, create it
 	####Variables####
-	line=#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!
+	line=-----------------------------------------------------------------------------------
 	whiptail_install_stderr_log=/var/log/LAMP-On-Demand/Error_whiptail_install.log
 	whiptail_install_stdout_log=/var/log/LAMP-On-Demand/whiptail_install.log
 	web_install_stderr_log=/var/log/LAMP-On-Demand/Error_websrv_install.log
@@ -393,7 +393,7 @@ Web_Server_Configuration () {		## start the web server's service
 	fi
 }
 
-Sql_Server_Installation () {		## choose which data base server would you like to install
+DataBase_Installation () {		## choose which data base server would you like to install
 	## prompt the user with a menu to select whether to install apache or nginx web server
 	whiptail --title "LAMP-On-Demand" \
 	--menu "Please choose sql server to install:" 15 55 5 \
@@ -518,7 +518,7 @@ Sql_Server_Installation () {		## choose which data base server would you like to
 	fi
 }
 
-Sql_Server_Configuration () {		## configure data base
+DataBase_Configuration () {		## configure data base
 	if [[ "$(cat $tempLAMP)" =~ "MariaDB" ]]; then
 		mysql_secure_installation
 		if [[ $? -eq 0 ]]; then
@@ -755,7 +755,69 @@ Lang_Installation () {	## installs language support of user choice
 }
 
 Lang_Configuration () {
+
 	if [[ "$(cat $tempLAMP)" == "PHP 5.4" ]]; then
+		systemctl status httpd |awk '{print $2}' |egrep 'active' &> /dev/null
+
+		if [[ $? -eq 0 ]]; then
+			systemctl restart httpd 2>> $web_service_stderr_log >> $web_service_stdout_log
+			if [[ $? -eq 0 ]]; then
+				whiptail --title "LAMP-On-Demand" \
+				--msgbox "\nPHP 7.0 support is up and running!" 8 78
+			else
+				whiptail --title "LAMP-On-Demand" \
+				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $web_service_stderr_log" 8 78
+				exit 1
+			fi
+
+		else
+			systemctl status nginx |awk '{print $2}' |egrep 'active' &> /dev/null
+			if [[ $? -eq 0 ]]; then
+				sed -ie 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/' $php_ini_conf
+				if [[ $? -eq 0 ]]; then
+					:
+				else
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nThere was a problem with sed command on \"$php_ini_conf\" file" 8 78
+					exit 1
+				fi
+				sed ie 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm\/php-fpm.sock/' $php_fpm_conf
+				if [[ $? -eq 0 ]]; then
+					:
+				else
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nThere was a problem with sed command on \"$php_fpm_conf\" file" 8 78
+					exit 1
+				fi
+				sed -ie 's/user = apache/user = nginx/' $php_fpm_conf
+				if [[ $? -eq 0 ]]; then
+					systemctl restart httpd 2>> $web_service_stderr_log >> $web_service_stdout_log
+					if [[ $? -eq 0 ]]; then
+						whiptail --title "LAMP-On-Demand" \
+						--msgbox "\nPHP support is up and running!" 8 78
+						Main_Menu
+					else
+						whiptail --title "LAMP-On-Demand" \
+						--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $web_service_stderr_log" 8 78
+						exit 1
+					fi
+				else
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nThere was a problem with sed command on \"$php_fpm_conf\" file" 8 78
+					exit 1
+				fi
+
+			else
+				whiptail --title "LAMP-On-Demand" \
+				--msgbox "\nCould not detect a running web server, please make sure apache or nginx is running." 8 78
+				exit 1
+			fi
+		fi
+
+
+
+
+	elif [[ "$(cat $tempLAMP)" == "PHP 7.0" ]]; then
 		if [[ $Distro_Val =~ "centos" ]]; then
 			systemctl status httpd |awk '{print $2}' |egrep 'active' &> /dev/null
 			if [[ $? -eq 0 ]]; then
@@ -777,77 +839,24 @@ Lang_Configuration () {
 				fi
 
 			else
-				systemctl status nginx |awk '{print $2}' |egrep 'active' &> /dev/null
-				if [[ $? -eq 0 ]]; then
-					sed -ie 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/' $php_ini_conf
-					if [[ $? -eq 0 ]]; then
-						:
-					else
-						whiptail --title "LAMP-On-Demand" \
-						--msgbox "\nThere was a problem with sed command on \"$php_ini_conf\" file" 8 78
-						exit 1
-					fi
-					sed ie 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm\/php-fpm.sock/' $php_fpm_conf
-					if [[ $? -eq 0 ]]; then
-						:
-					else
-						whiptail --title "LAMP-On-Demand" \
-						--msgbox "\nThere was a problem with sed command on \"$php_fpm_conf\" file" 8 78
-						exit 1
-					fi
-					sed -ie 's/user = apache/user = nginx/' $php_fpm_conf
-					if [[ $? -eq 0 ]]; then
-						systemctl restart httpd 2>> $web_service_stderr_log >> $web_service_stdout_log
-						if [[ $? -eq 0 ]]; then
-							whiptail --title "LAMP-On-Demand" \
-							--msgbox "\nPHP support is up and running!" 8 78
-							Main_Menu
-						else
-							whiptail --title "LAMP-On-Demand" \
-							--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $web_service_stderr_log" 8 78
-							exit 1
-						fi
-					else
-						whiptail --title "LAMP-On-Demand" \
-						--msgbox "\nThere was a problem with sed command on \"$php_fpm_conf\" file" 8 78
-						exit 1
-					fi
 
 
-	if [[ "$(cat $tempLAMP)" == "PHP 5.4" ]]; then
-		systemctl status httpd |awk '{print $2}' |egrep 'active' &> /dev/null
-		if [[ $? -eq 0 ]]; then
-			:
-			if [[ $? -eq 0 ]]; then
-				systemctl restart httpd 2>> $web_service_stderr_log >> $web_service_stdout_log
-				if [[ $? -eq 0 ]]; then
-					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nPHP 7.0 support is up and running!" 8 78
-				else
-					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $web_service_stderr_log" 8 78
-					exit 1
-				fi
-			else
-				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nThere was a problem with sed command or the \"php.conf\" file doesn't exists" 8 78
-				exit 1
-			fi
 
 
 
 		elif [[ $Distro_Val =~ "debian" ]]; then
 
 		fi
+	fi
 }
 
 Main_Menu () {
-	####function call####
+	####function calls####
 	Root_Check
 	Distro_Check
 	Log_And_Variables
 	Whiptail_Check
-	####function call####
+	####function calls####
 
 	whiptail --title "LAMP-On-Demand" \
 	--menu "Please choose what whould you like to install:" 15 55 5 \
@@ -860,8 +869,8 @@ Main_Menu () {
 		Web_Server_Installation
 		Web_Server_Configuration
 	elif [[ "$(cat $tempLAMP)" == "DataBase server" ]]; then
-		Sql_Server_Installation
-		Sql_Server_Configuration
+		DataBase_Installation
+		DataBase_Configuration
 	elif [[ "$(cat $tempLAMP)" == "Language server" ]]; then
 		Lang_Installation
 		Lang_Configuration
