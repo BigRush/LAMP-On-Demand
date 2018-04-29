@@ -839,7 +839,8 @@ Lang_Configuration () {
 				fi
 
 			else
-				:
+				exit 1
+			fi
 
 
 
