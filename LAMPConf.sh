@@ -839,13 +839,13 @@ Lang_Configuration () {
 				fi
 
 			else
-
-
+				:
 
 
 
 		elif [[ $Distro_Val =~ "debian" ]]; then
 			:
+
 		fi
 	fi
 }
