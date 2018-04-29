@@ -860,7 +860,7 @@ Main_Menu () {
 	####function calls####
 
 	whiptail --title "LAMP-On-Demand" \
-	--menu "Please choose what whould you like to install:" 15 55 5 \
+	--menu "Please choose what whould you like to install:" 15 70 5 \
 	"Web server" "Apache2, Nginx" \
 	"DataBase server" "MariaDB, PostgreSQL" \
 	"Language" "PHP, Python 3.6" \
@@ -875,7 +875,7 @@ Main_Menu () {
 	elif [[ "$(cat $tempLAMP)" == "Language server" ]]; then
 		Lang_Installation
 		Lang_Configuration
-	elif [[ "$(cat $tempLAMP)" == "Exit" ]];
+	elif [[ "$(cat $tempLAMP)" == "Exit" ]]; then
 		whiptail --title "LAMP-On-Demand" \
 		--msgbox "\nExit - I hope you feel safe now." 8 78
 		exit 0
