@@ -16,7 +16,7 @@ Root_Check () {		## checks that the script runs as root
 
 Log_And_Variables () {		## set log path and variables for installation logs, makes sure whether log folder exists and if not, create it
 	####Variables####
-	line=-----------------------------------------------------------------------------------
+	line="-----------------------------------------------------------------------------------"
 	whiptail_install_stderr_log=/var/log/LAMP-On-Demand/Error_whiptail_install.log
 	whiptail_install_stdout_log=/var/log/LAMP-On-Demand/whiptail_install.log
 	web_install_stderr_log=/var/log/LAMP-On-Demand/Error_websrv_install.log
@@ -39,8 +39,8 @@ Log_And_Variables () {		## set log path and variables for installation logs, mak
 	php_ini_conf=/etc/php.ini
 	log_folder=/var/log/LAMP-On-Demand
 	tempLAMP=$log_folder/LAMP_choise.tmp
-	apache_index_path=/var/www/html
-	nginx_index_path=/usr/share/nginx/html
+	apache_index_path=/var/www/html/index.html
+	nginx_index_path=/usr/share/nginx/html/index.html
 	nginx_conf_path=/etc/conf.d/default.conf
 	my_index_html=$(printf "
 	<!DOCTYPE html>
