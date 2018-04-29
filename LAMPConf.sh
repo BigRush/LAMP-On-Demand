@@ -16,7 +16,7 @@ Root_Check () {		## checks that the script runs as root
 
 Log_And_Variables () {		## set log path and variables for installation logs, makes sure whether log folder exists and if not, create it
 	####Variables####
-	line="-----------------------------------------------------------------------------------"
+	line="***************************************"
 	whiptail_install_stderr_log=/var/log/LAMP-On-Demand/Error_whiptail_install.log
 	whiptail_install_stdout_log=/var/log/LAMP-On-Demand/whiptail_install.log
 	web_install_stderr_log=/var/log/LAMP-On-Demand/Error_websrv_install.log
@@ -185,7 +185,7 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 			{
 				i=3
 				while true ;do
-					ps aux |egrep -Eo "$!" &> /dev/null
+					ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null
 					if [[ $? -eq 0 ]]; then
 						if [[ $i -le 94 ]]; then
 							printf "$i\n"
@@ -210,7 +210,7 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 			{
 				i=3
 				while true ;do
-					ps aux |egrep -Eo "$!" &> /dev/null
+					ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null
 					if [[ $? -eq 0 ]]; then
 						if [[ $i -le 94 ]]; then
 							printf "$i\n"
@@ -408,7 +408,7 @@ DataBase_Installation () {		## choose which data base server would you like to i
 			{
 				i=3
 				while true ;do
-					ps aux |egrep -Eo "$!" &> /dev/null
+					ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null
 					if [[ $? -eq 0 ]]; then
 						if [[ $i -le 94 ]]; then
 							printf "$i\n"
@@ -450,7 +450,7 @@ DataBase_Installation () {		## choose which data base server would you like to i
 			{
 				i=3
 				while true ;do
-					ps aux |egrep -Eo "$!" &> /dev/null
+					ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null
 					if [[ $? -eq 0 ]]; then
 						if [[ $i -le 94 ]]; then
 							printf "$i\n"
@@ -649,7 +649,7 @@ Lang_Installation () {	## installs language support of user choice
 			{
 				i=3
 				while true ;do
-					ps aux |egrep -Eo "$!" &> /dev/null
+					ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null
 					if [[ $? -eq 0 ]]; then
 						if [[ $i -le 94 ]]; then
 							printf "$i\n"
@@ -681,7 +681,7 @@ Lang_Installation () {	## installs language support of user choice
 			{
 				i=3
 				while true ;do
-					ps aux |egrep -Eo "$!" &> /dev/null
+					ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null
 					if [[ $? -eq 0 ]]; then
 						if [[ $i -le 94 ]]; then
 							printf "$i\n"
@@ -715,7 +715,7 @@ Lang_Installation () {	## installs language support of user choice
 			{
 				i=3
 				while true ;do
-					ps aux |egrep -Eo "$!" &> /dev/null
+					ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null
 					if [[ $? -eq 0 ]]; then
 						if [[ $i -le 94 ]]; then
 							printf "$i\n"
@@ -796,7 +796,7 @@ Lang_Configuration () {
 					--msgbox "\nSomething went wrong while restarting nginx service.\nPlease read $web_service_stderr_log and $Error_lang_service" 8 78
 					exit 1
 				fi
-				
+
 			else
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nCould not detect a running web server, please make sure apache or nginx is running." 8 78
