@@ -170,7 +170,9 @@ Whiptail_Check () {		## checks if whiptail is installed, if it doesn't then inst
 }
 
 Web_Server_Installation () {		## choose which web server would you like to install
+
 	## prompt the user with a menu to select whether to install apache or nginx web server
+	## by checking the value we stored in the temporary file and the Distro value
 	whiptail --title "LAMP-On-Demand" \
 	--menu "Please choose web server to install:" 15 55 5 \
 	"Apache" "Open-source cross-platform web server" \
@@ -181,11 +183,16 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 
 	if [[ $(cat $tempLAMP) =~ "Apache" ]]; then
 		if [[ $Distro_Val =~ "centos" ]]; then
+
+				## install apache server, send stderr & stdout to log files
+				## put the process in the background so we could use $! later to get the PID
 			yum install httpd -y 2>> $web_install_stderr_log >> $web_install_stdout_log &
+
+			## progress bar that runs while the installation process is running
 			{
-				i=3
+				i=3		## i represents the completion percentage, the progress bar will start at 3%
 				while true ;do
-					ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null
+					ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null		## get
 					if [[ $? -eq 0 ]]; then
 						if [[ $i -le 94 ]]; then
 							printf "$i\n"
@@ -231,16 +238,15 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 				sleep 1
 			} |whiptail --gauge "Please wait while installing..." 6 50 0
 		fi
+
 		if [[ $? -eq 0 ]]; then
-			printf "$line\n"
-			printf "Apache installation completed successfully, have a nice day!\n"
-			printf "$line\n"
+			whiptail --title "LAMP-On-Demand" \
+			--msgbox "\nApache installation completed successfully, have a nice day!." 8 78
+			Main_Menu
 		else
-			printf "$line\n"
-			printf "Something went wrong during Apache installation\n"
-			printf "Please check the log file under $web_install_stderr_log\n"
-			printf "$line\n"
-			exit 1
+			whiptail --title "LAMP-On-Demand" \
+			--msgbox "\nSomething went wrong during Apache installation.\nPlease check the log file under $web_install_stderr_log" 8 78
+			Main_Menu
 		fi
 	elif [[ $(cat $tempLAMP) =~ "Nginx" ]]; then
 		if [[ $Distro_Val =~ "centos" ]]; then
