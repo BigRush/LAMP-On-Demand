@@ -171,8 +171,9 @@ Whiptail_Check () {		## checks if whiptail is installed, if it doesn't then inst
 
 Web_Server_Installation () {		## choose which web server would you like to install
 
-	## prompt the user with a menu to select whether to install apache or nginx web server
-	## by checking the value we stored in the temporary file and the Distro value
+	## prompt the user with a menu to select whether to install apache or nginx web server,
+	## the user's input will be stored in a temporary file,
+	## by checking the value we stored in the temporary file the script will install the chosen web server according to the user's distro.
 	whiptail --title "LAMP-On-Demand" \
 	--menu "Please choose web server to install:" 15 55 5 \
 	"Apache" "Open-source cross-platform web server" \
@@ -181,30 +182,33 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 	"Exit" "Walk away from the path to LAMP stack :(" 2> $tempLAMP
 	clear
 
-	if [[ $(cat $tempLAMP) =~ "Apache" ]]; then
-		if [[ $Distro_Val =~ "centos" ]]; then
+	if [[ $(cat $tempLAMP) =~ "Apache" ]]; then		## check the temp file to see the user's choice
+		if [[ $Distro_Val =~ "centos" ]]; then		## check the user's distribution
 
-				## install apache server, send stderr & stdout to log files
-				## put the process in the background so we could use $! later to get the PID
+			## install apache server, send stderr & stdout to log files
+			## put the process in the background so we could use "$!" (PID of the most recently executed background command) later to get the PID
 			yum install httpd -y 2>> $web_install_stderr_log >> $web_install_stdout_log &
 
 			## progress bar that runs while the installation process is running
 			{
 				i=3		## i represents the completion percentage, the progress bar will start at 3%
-				while true ;do
-					ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null		## get
-					if [[ $? -eq 0 ]]; then
+				while true ;do		## endless loop
+					ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null		## checks if our process is still alive by checking if his PID shows in ps command
+					if [[ $? -eq 0 ]]; then		## checks exit status of last command, if succeed
+
+						## make sure that if our process takes a long time that the percentage will not exceed 94%
+						## if it doesn't print the current percentage, add 7 to the percentage variable and wait 2.5 seconds
 						if [[ $i -le 94 ]]; then
 							printf "$i\n"
 							i=$(expr $i + 7)
 							sleep 2.5
-						else
-							:
 						fi
-					else
+					else		## when ps fails to get the process break the loop
 						break
 					fi
 				done
+
+				## when the loop is done print 96%, 98%, and 100%, wait 0.5 second between each and lastly wait 1 second
 				printf "96\n"
 				sleep 0.5
 				printf "98\n"
@@ -212,7 +216,8 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 				printf "100\n"
 				sleep 1
 			} |whiptail --gauge "Please wait while installing..." 6 50 0
-		elif [[ $Distro_Val =~ "debian" ]]; then
+
+		elif [[ $Distro_Val =~ "debian" ]]; then		## check the user's distribution
 			apt-get install apache2 -y 2>> $web_install_stderr_log >> $web_install_stdout_log &
 			{
 				i=3
