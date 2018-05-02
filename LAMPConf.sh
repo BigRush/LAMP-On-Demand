@@ -31,8 +31,8 @@ Log_And_Variables () {		## set log path and variables for installation logs, mak
 	lang_install_stdout_log=/var/log/LAMP-On-Demand/lang_install.log
 	lang_service_stderr_log=/var/log/LAMP-On-Demand/Error_lang_service.log
 	lang_service_stdout_log=/var/log/LAMP-On-Demand/lang_service.log
-	remi_reop_stderr_log=/var/log/LAMP-On-Demand/Error_remi_repo.log
-	remi_reop_stdout_log=/var/log/LAMP-On-Demand/remi_repo.log
+	repo_stderr_log=/var/log/LAMP-On-Demand/Error_repo.log
+	repo_stdout_log=/var/log/LAMP-On-Demand/repo.log
 	firewall_log=/var/log/LAMP-On-Demand/firewall.log
 	php_conf=/etc/httpd/conf.d/php.conf
 	php_fpm_conf=/etc/php-fpm.d/www.conf
@@ -104,6 +104,36 @@ EOF
 	else
 		mkdir -p $log_folder
 	fi
+}
+
+Progress_Bar () {		## progress bar that runs while the installation process is running
+
+	{
+		i=3		## i represents the completion percentage, the progress bar will start at 3%
+		while true ;do		## endless loop
+			ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null		## checks if our process is still alive by checking if his PID shows in ps command
+			if [[ $? -eq 0 ]]; then		## checks exit status of last command, if succeed
+
+				## make sure that if our process takes a long time that the percentage will not exceed 94%
+				## if it doesn't print the current percentage, add 7 to the percentage variable and wait 2.5 seconds
+				if [[ $i -le 94 ]]; then
+					printf "$i\n"
+					i=$(expr $i + 7)
+					sleep 2.5
+				fi
+			else		## when ps fails to get the process break the loop
+				break
+			fi
+		done
+
+		## when the loop is done print 96%, 98%, and 100%, wait 0.5 second between each and lastly wait 1 second
+		printf "96\n"
+		sleep 0.5
+		printf "98\n"
+		sleep 0.5
+		printf "100\n"
+		sleep 1
+	} |whiptail --gauge "Please wait while installing..." 6 50 0
 }
 
 Distro_Check () {		## checking the environment the user is currenttly running on to determine which settings should be applied
@@ -184,90 +214,65 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 
 	if [[ $(cat $tempLAMP) =~ "Apache" ]]; then		## check the temp file to see the user's choice
 		if [[ $Distro_Val =~ "centos" ]]; then		## check the user's distribution
-
 			## install apache server, send stderr & stdout to log files
 			## put the process in the background so we could use "$!" (PID of the most recently executed background command) later to get the PID
 			yum install httpd -y 2>> $web_install_stderr_log >> $web_install_stdout_log &
-
-			## progress bar that runs while the installation process is running
-			{
-				i=3		## i represents the completion percentage, the progress bar will start at 3%
-				while true ;do		## endless loop
-					ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null		## checks if our process is still alive by checking if his PID shows in ps command
-					if [[ $? -eq 0 ]]; then		## checks exit status of last command, if succeed
-
-						## make sure that if our process takes a long time that the percentage will not exceed 94%
-						## if it doesn't print the current percentage, add 7 to the percentage variable and wait 2.5 seconds
-						if [[ $i -le 94 ]]; then
-							printf "$i\n"
-							i=$(expr $i + 7)
-							sleep 2.5
-						fi
-					else		## when ps fails to get the process break the loop
-						break
-					fi
-				done
-
-				## when the loop is done print 96%, 98%, and 100%, wait 0.5 second between each and lastly wait 1 second
-				printf "96\n"
-				sleep 0.5
-				printf "98\n"
-				sleep 0.5
-				printf "100\n"
-				sleep 1
-			} |whiptail --gauge "Please wait while installing..." 6 50 0
+			Progress_Bar		## call "Progress_Bar" function
 
 		elif [[ $Distro_Val =~ "debian" ]]; then		## check the user's distribution
+			## install apache server, send stderr & stdout to log files
+			## put the process in the background so we could use "$!" (PID of the most recently executed background command) later to get the PID
 			apt-get install apache2 -y 2>> $web_install_stderr_log >> $web_install_stdout_log &
-			{
-				i=3
-				while true ;do
-					ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null
-					if [[ $? -eq 0 ]]; then
-						if [[ $i -le 94 ]]; then
-							printf "$i\n"
-							i=$(expr $i + 7)
-							sleep 2.5
-						else
-							:
-						fi
-					else
-						break
-					fi
-				done
-				printf "96\n"
-				sleep 0.5
-				printf "98\n"
-				sleep 0.5
-				printf "100\n"
-				sleep 1
-			} |whiptail --gauge "Please wait while installing..." 6 50 0
+			Progress_Bar		## call "Progress_Bar" function
 		fi
 
-		if [[ $? -eq 0 ]]; then
+		if [[ $? -eq 0 ]]; then		## check exit status, let the user know if the installation was successfull
 			whiptail --title "LAMP-On-Demand" \
 			--msgbox "\nApache installation completed successfully, have a nice day!." 8 78
 			Main_Menu
 		else
 			whiptail --title "LAMP-On-Demand" \
 			--msgbox "\nSomething went wrong during Apache installation.\nPlease check the log file under $web_install_stderr_log" 8 78
-			Main_Menu
+			exit 1
 		fi
+
 	elif [[ $(cat $tempLAMP) =~ "Nginx" ]]; then
 		if [[ $Distro_Val =~ "centos" ]]; then
+			yum -y install epel-release 2>> $repo_stderr_log >> $repo_stdout_log &
+			Progress_Bar
+			if [[ $? -eq 0 ]]; then
+				whiptail --title "LAMP-On-Demand" \
+				--msgbox "\nEPEL repo installation complete." 8 78
+				Main_Menu
+			else
+				whiptail --title "LAMP-On-Demand" \
+				--msgbox "\nSomething went wrong, EPEL repo installation failed." 8 78
+				exit 1
+			fi
+
 			yum --enablerepo=epel -y install nginx 2>> $web_install_stderr_log >> $web_install_stdout_log
+			if [[ $? -eq 0 ]]; then
+				whiptail --title "LAMP-On-Demand" \
+				--msgbox "\nNginx installation completed successfully, have a nice day!." 8 78
+				Main_Menu
+			else
+				whiptail --title "LAMP-On-Demand" \
+				--msgbox "\nSomething went wrong during Nginx installation.\nPlease check the log file under $web_install_stderr_log" 8 78
+				exit 1
+			fi
+
 		elif [[ $Distro_Val =~ "debian" ]]; then
 			apt-get install nginx -y 2>> $web_install_stderr_log >> $web_install_stdout_log
+			Progress_Bar
 		fi
+
 		if [[ $? -eq 0 ]]; then
-			printf "$line\n"
-			printf "Nginx installation completed successfully, have a nice day!\n"
-			printf "$line\n"
+			whiptail --title "LAMP-On-Demand" \
+			--msgbox "\nNginx installation completed successfully, have a nice day!." 8 78
+			Main_Menu
 		else
-			printf "$line\n"
-			printf "Something went wrong during Nginx installation\n"
-			printf "Please check the log file under $web_install_stderr_log\n"
-			printf "$line\n"
+			whiptail --title "LAMP-On-Demand" \
+			--msgbox "\nSomething went wrong during Nginx installation.\nPlease check the log file under $web_install_stderr_log" 8 78
 			exit 1
 		fi
 
@@ -275,9 +280,9 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 		Main_Menu
 
 	elif [[ "$(cat $tempLAMP)" =~ "Exit" ]]; then
-		printf "$line\n"
-		printf "Exit - I hope you feel safe now\n"
-		printf "$line\n"
+		whiptail --title "LAMP-On-Demand" \
+		--msgbox "\nExit - I hope you feel safe now" 8 78
+		exit 0
 	fi
 	}
 
@@ -656,36 +661,14 @@ Lang_Installation () {	## installs language support of user choice
 
 	elif [[ "$(cat $tempLAMP)" == "PHP 7.0" ]]; then
 		if [[ $Distro_Val =~ "centos" ]]; then
-			yum -y install http://rpms.famillecollet.com/enterprise/remi-release-7.rpm 2>> $remi_reop_stderr_log >> $remi_reop_stdout_log &
-			{
-				i=3
-				while true ;do
-					ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null
-					if [[ $? -eq 0 ]]; then
-						if [[ $i -le 94 ]]; then
-							printf "$i\n"
-							i=$(expr $i + 7)
-							sleep 2.5
-						else
-							:
-						fi
-					else
-						break
-					fi
-				done
-				printf "96\n"
-				sleep 0.5
-				printf "98\n"
-				sleep 0.5
-				printf "100\n"
-				sleep 1
-			} |whiptail --gauge "Please wait while installing..." 6 50 0
+			yum -y install http://rpms.famillecollet.com/enterprise/remi-release-7.rpm 2>> $repo_stderr_log >> $repo_stdout_log &
+			Progress_Bar
 			if [[ $? -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nRemi's reop installation complete." 8 78
+				--msgbox "\nRemi's repo installation complete." 8 78
 			else
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nSomething went wrong, Remi's reop installation failed." 8 78
+				--msgbox "\nSomething went wrong, Remi's repo installation failed." 8 78
 				exit 1
 			fi
 			yum --enablerepo=remi-safe -y install php70 php70-php-pear php70-php-mbstring php70-php-fpm 2>> $lang_install_stderr_log >> $sql_install_stdout_log &
@@ -751,7 +734,7 @@ Lang_Installation () {	## installs language support of user choice
 				--msgbox "\nPHP 7.0 installation complete." 8 78
 			else
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nSomething went wrong, Remi's reop installation failed." 8 78
+				--msgbox "\nSomething went wrong, Remi's repo installation failed." 8 78
 			fi
 		fi
 
