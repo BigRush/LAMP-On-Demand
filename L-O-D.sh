@@ -56,7 +56,7 @@ Log_And_Variables () {		## set log path and variables for installation logs, mak
 	tempLAMP=$log_folder/LAMP_choise.tmp
 	apache_index_path=/var/www/html/index.html
 	nginx_index_path=/usr/share/nginx/html/index.html
-	nginx_conf_path=/etc/conf.d/default.conf
+	nginx_conf_path=/etc/nginx/conf.d/default.conf
 	read -r -d '' my_index_html <<- EOF
     <!DOCTYPE html>
     <html>
@@ -652,7 +652,7 @@ Lang_Installation () {	## installs language support of user choice
 			if [[ $status -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nPHP 5.4 installation completed successfully, have a nice day!" 8 70
-				if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure MariaDB?" 8 40); then
+				if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure PHP?" 8 40); then
 					Lang_Configuration
 				else
 					Main_Menu
@@ -692,7 +692,7 @@ Lang_Installation () {	## installs language support of user choice
 			if [[ $? -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nPHP 7.0 installation completed successfully, have a nice day!" 8 70
-				if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure MariaDB?" 8 40); then
+				if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure PHP?" 8 40); then
 					Lang_Configuration
 				else
 					Main_Menu
@@ -711,7 +711,7 @@ Lang_Installation () {	## installs language support of user choice
 			if [[ $? -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nPHP 7.0 installation completed successfully, have a nice day!" 8 70
-				if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure MariaDB?" 8 40); then
+				if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure PHP" 8 40); then
 					Lang_Configuration
 				else
 					Main_Menu
