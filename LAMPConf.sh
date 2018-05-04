@@ -239,7 +239,7 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 
 		if [[ $status -eq 0 ]]; then		## check exit status, let the user know if the installation was successfull
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nApache installation completed successfully, have a nice day!." 8 50
+			--msgbox "\nApache installation completed successfully, have a nice day!." 8 65
 
 			## prompets yes/no and ask the user whether he wants to configure apache
 			if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure Apache?" 8 40); then
@@ -261,7 +261,7 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 			Progress_Bar
 			if [[ $status -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nEPEL repo installation complete." 8 40
+				--msgbox "\nEPEL repo installation complete." 8 35
 			else
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nSomething went wrong, EPEL repo installation failed." 8 50
@@ -273,7 +273,7 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 			Progress_Bar
 			if [[ $status -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nNginx installation completed successfully, have a nice day!." 8 50
+				--msgbox "\nNginx installation completed successfully, have a nice day!" 8 65
 				if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure Nginx?" 8 40); then
 					Web_Server_Configuration
 				else
@@ -294,7 +294,7 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 
 		if [[ $status -eq 0 ]]; then
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nNginx installation completed successfully, have a nice day!." 8 50
+			--msgbox "\nNginx installation completed successfully, have a nice day!." 8 65
 			if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure Nginx?" 8 40); then
 				Web_Server_Configuration
 			else
@@ -312,7 +312,7 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 
 	elif [[ "$(cat $tempLAMP)" =~ "Exit" ]]; then
 		whiptail --title "LAMP-On-Demand" \
-		--msgbox "\nExit - I hope you feel safe now" 8 40
+		--msgbox "\nExit - I hope you feel safe now" 8 30
 		exit 0
 	fi
 	}
@@ -332,7 +332,7 @@ Web_Server_Configuration () {		## start the web server's service
 			systemctl restart httpd 2>> $web_service_stderr_log >> $web_service_stdout_log
 			if [[ $? -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nApache web server is up and running!" 8 78
+				--msgbox "\nApache web server is up and running!" 8 40
 				Main_Menu
 			else
 				whiptail --title "LAMP-On-Demand" \
@@ -346,7 +346,7 @@ Web_Server_Configuration () {		## start the web server's service
 					:
 				else
 					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nFailed to add HTTP service to firewall rules" 8 78
+					--msgbox "\nFailed to add HTTP service to firewall rules" 8 50
 					exit 1
 				fi
 				firewall-cmd --reload
@@ -354,7 +354,7 @@ Web_Server_Configuration () {		## start the web server's service
 					:
 				else
 					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nFailed to reload firewall" 8 78
+					--msgbox "\nFailed to reload firewall" 8 30
 					exit 1
 				fi
 			else
@@ -372,7 +372,7 @@ Web_Server_Configuration () {		## start the web server's service
 			systemctl restart apache2 2>> $web_service_stderr_log >> $web_service_stdout_log
 			if [[ $? -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nApache web server is up and running!" 8 78
+				--msgbox "\nApache web server is up and running!" 8 40
 				Main_Menu
 			else
 				whiptail --title "LAMP-On-Demand" \
@@ -382,7 +382,7 @@ Web_Server_Configuration () {		## start the web server's service
 		fi
 
 	elif [[ "$(cat $tempLAMP)" =~ "Nginx" ]]; then
-		cat "$my_index_html\n" > $nginx_index_path
+		printf "$my_index_html\n" > $nginx_index_path
 		systemctl enable nginx 2>> $web_service_stderr_log >> $web_service_stdout_log
 		if [[ $? -eq 0 ]] ;then
 			:
@@ -394,7 +394,7 @@ Web_Server_Configuration () {		## start the web server's service
 		systemctl restart nginx 2>> $web_service_stderr_log >> $web_service_stdout_log
 		if [[ $? -eq 0 ]] ;then
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nNginx web server is up and running!" 8 78
+			--msgbox "\nNginx web server is up and running!" 8 40
 			Main_Menu
 		else
 			whiptail --title "LAMP-On-Demand" \
@@ -410,7 +410,7 @@ Web_Server_Configuration () {		## start the web server's service
 					:
 				else
 					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nFailed to add HTTP service to firewall rules" 8 78
+					--msgbox "\nFailed to add HTTP service to firewall rules" 8 40
 					exit 1
 				fi
 				firewall-cmd --reload
