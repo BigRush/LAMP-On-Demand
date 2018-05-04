@@ -271,16 +271,18 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 
 	elif [[ $(cat $tempLAMP) =~ "Nginx" ]]; then
 		if [[ $Distro_Val =~ "centos" ]]; then
-			yum -y install epel-release 2>> $repo_stderr_log >> $repo_stdout_log &
-			status=$?
-			Progress_Bar
-			if [[ $status -eq 0 ]]; then
-				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nEPEL repo installation complete." 8 37
-			else
-				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nSomething went wrong, EPEL repo installation failed." 8 57
-				exit 1
+			if [[ $epel_repo -eq 0 ]]; then
+				yum -y install epel-release 2>> $repo_stderr_log >> $repo_stdout_log &
+				status=$?
+				Progress_Bar
+				if [[ $status -eq 0 ]]; then
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nEPEL repo installation complete." 8 37
+				else
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nSomething went wrong, EPEL repo installation failed." 8 57
+					exit 1
+				fi
 			fi
 
 			yum --enablerepo=epel -y install nginx 2>> $web_install_stderr_log >> $web_install_stdout_log &
@@ -668,17 +670,20 @@ Lang_Installation () {	## installs language support of user choice
 
 	elif [[ "$(cat $tempLAMP)" == "PHP 7.0" ]]; then
 		if [[ $Distro_Val =~ "centos" ]]; then
-			yum -y install http://rpms.famillecollet.com/enterprise/remi-release-7.rpm 2>> $repo_stderr_log >> $repo_stdout_log &
-			status=$?
-			Progress_Bar
-			if [[ $status -eq 0 ]]; then
-				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nRemi's repo installation complete." 8 78
-			else
-				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nSomething went wrong, Remi's repo installation failed." 8 78
-				exit 1
+			if [[ $remi_repo -eq 0 ]]; then
+				yum -y install http://rpms.famillecollet.com/enterprise/remi-release-7.rpm 2>> $repo_stderr_log >> $repo_stdout_log &
+				status=$?
+				Progress_Bar
+				if [[ $status -eq 0 ]]; then
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nRemi's repo installation complete." 8 78
+				else
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nSomething went wrong, Remi's repo installation failed." 8 78
+					exit 1
+				fi
 			fi
+
 			yum --enablerepo=remi-safe -y install php70 php70-php-pear php70-php-mbstring php70-php-fpm 2>> $lang_install_stderr_log >> $db_install_stdout_log &
 			status=$?
 			Progress_Bar
