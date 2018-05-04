@@ -12,8 +12,8 @@
 
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ####ToDo####
-#1) polish Functions
-#2) add python 3 support
+#1) add python 3 support
+#2) finish lang conf function
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 ####Functions####
@@ -716,7 +716,7 @@ Lang_Installation () {	## installs language support of user choice
 				else
 					Main_Menu
 				fi
-				
+
 			else
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nSomething went wrong during PHP 7.0 installation.\nPlease check the log file under:\n$lang_install_stderr_log" 10 60
