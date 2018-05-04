@@ -1,5 +1,20 @@
-#!/bin/bash
+#!/usr/bin/env #!/usr/bin/env bash
 
+#######################################################################################
+# Author	: BigRush
+#
+#License	: GPLv3
+#
+# Description	: Menu for installing and configuring LAMP/LEMP services automatically.
+#
+# Version	: 1.0.0
+#######################################################################################
+
+#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+####ToDo####
+#1) polish Functions
+#2) add python 3 support
+#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 ####Functions####
 
@@ -253,7 +268,7 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 			yum --enablerepo=epel -y install nginx 2>> $web_install_stderr_log >> $web_install_stdout_log
 			if [[ $? -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nNginx installation completed successfully, have a nice day!." 8 78
+				--msgbox "\nNginx installation completed successfully, have a nice day!." 8 60
 				Main_Menu
 			else
 				whiptail --title "LAMP-On-Demand" \
@@ -268,7 +283,7 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 
 		if [[ $? -eq 0 ]]; then
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nNginx installation completed successfully, have a nice day!." 8 78
+			--msgbox "\nNginx installation completed successfully, have a nice day!." 8 60
 			Main_Menu
 		else
 			whiptail --title "LAMP-On-Demand" \
