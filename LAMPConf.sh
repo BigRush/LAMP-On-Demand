@@ -171,6 +171,21 @@ Distro_Check () {		## checking the environment the user is currenttly running on
 	fi
 }
 
+Repo_Check () { 		## check for existing repositories
+	if [[ -e /etc/yum.repos.d/remi.repo ]]; then
+		remi_repo=0
+	else
+		remi_repo=1
+	fi
+
+	if [[ -e /etc/yum.repos.d/epel.repo ]]; then
+		epel_repo=0
+	else
+		epel_repo=1
+	fi
+
+}
+
 Whiptail_Check () {		## checks if whiptail is installed, if it doesn't then install whiptail
 	command -v whiptail &> /dev/null
 	if [[ $? -eq 0 ]]; then
@@ -630,6 +645,21 @@ Lang_Installation () {	## installs language support of user choice
 			yum install php php-mysql php-fpm -y 2>> $lang_install_stderr_log >> $lang_install_stdout_log &
 			status=$?
 			Progress_Bar
+			if [[ $status -eq 0 ]]; then
+				whiptail --title "LAMP-On-Demand" \
+				--msgbox "\nPHP 5.4 installation completed successfully, have a nice day!" 8 70
+				if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure MariaDB?" 8 40); then
+					Lang_Configuration
+				else
+					Main_Menu
+				fi
+
+			else
+				whiptail --title "LAMP-On-Demand" \
+				--msgbox "\nSomething went wrong during PHP 5.4 installation.\nPlease check the log file under:\n$web_install_stderr_log" 10 60
+				exit 1
+			fi
+
 		elif [[ $Distro_Val =~ "debian" ]]; then
 			whiptail --title "LAMP-On-Demand" \
 			--msgbox "\nSorry, this script doesn't support php 5.4 installation for Debian." 8 78
@@ -639,8 +669,9 @@ Lang_Installation () {	## installs language support of user choice
 	elif [[ "$(cat $tempLAMP)" == "PHP 7.0" ]]; then
 		if [[ $Distro_Val =~ "centos" ]]; then
 			yum -y install http://rpms.famillecollet.com/enterprise/remi-release-7.rpm 2>> $repo_stderr_log >> $repo_stdout_log &
+			status=$?
 			Progress_Bar
-			if [[ $? -eq 0 ]]; then
+			if [[ $status -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nRemi's repo installation complete." 8 78
 			else
@@ -649,29 +680,8 @@ Lang_Installation () {	## installs language support of user choice
 				exit 1
 			fi
 			yum --enablerepo=remi-safe -y install php70 php70-php-pear php70-php-mbstring php70-php-fpm 2>> $lang_install_stderr_log >> $db_install_stdout_log &
-			{
-				i=3
-				while true ;do
-					ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null
-					if [[ $? -eq 0 ]]; then
-						if [[ $i -le 94 ]]; then
-							printf "$i\n"
-							i=$(expr $i + 7)
-							sleep 2.5
-						else
-							:
-						fi
-					else
-						break
-					fi
-				done
-				printf "96\n"
-				sleep 0.5
-				printf "98\n"
-				sleep 0.5
-				printf "100\n"
-				sleep 1
-			} |whiptail --gauge "Please wait while installing..." 6 50 0
+			status=$?
+			Progress_Bar
 			if [[ $? -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nPHP 7.0 installation complete." 8 78
@@ -829,13 +839,10 @@ Main_Menu () {
 
 	if [[ "$(cat $tempLAMP)" == "Web server" ]]; then
 		Web_Server_Installation
-		Web_Server_Configuration
 	elif [[ "$(cat $tempLAMP)" == "DataBase server" ]]; then
 		DataBase_Installation
-		DataBase_Configuration
 	elif [[ "$(cat $tempLAMP)" == "Language server" ]]; then
 		Lang_Installation
-		Lang_Configuration
 	elif [[ "$(cat $tempLAMP)" == "Exit" ]]; then
 		whiptail --title "LAMP-On-Demand" \
 		--msgbox "\nExit - I hope you feel safe now." 8 37
