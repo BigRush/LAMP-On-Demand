@@ -350,6 +350,8 @@ Web_Server_Configuration () {		## start the web server's service
 				fi
 				firewall-cmd --reload
 				if [[ $? -eq 0 ]]; then
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nFireWall rule added for Apache" 8 40
 					Main_Menu
 				else
 					whiptail --title "LAMP-On-Demand" \
@@ -412,6 +414,8 @@ Web_Server_Configuration () {		## start the web server's service
 				fi
 				firewall-cmd --reload
 				if [[ $? -eq 0 ]]; then
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nFireWall rule added for Nginx" 8 40
 					Main_Menu
 				else
 					whiptail --title "LAMP-On-Demand" \
@@ -540,6 +544,8 @@ DataBase_Configuration () {		## configure data base
 				fi
 				firewall-cmd --reload
 				if [[ $? -eq 0 ]]; then
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nFireWall rule added for MariaDB" 8 40
 					Main_Menu
 				else
 					whiptail --title "LAMP-On-Demand" \
@@ -593,6 +599,8 @@ DataBase_Configuration () {		## configure data base
 				fi
 				firewall-cmd --reload
 				if [[ $? -eq 0 ]]; then
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nFireWall rule added for PostgreSQL" 8 40
 					Main_Menu
 				else
 					whiptail --title "LAMP-On-Demand" \
