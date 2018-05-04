@@ -108,12 +108,6 @@ EOF
 EOF
 	####Variables####
 
-	if [[ -d $index_path ]]; then
-		:
-	else
-		mkdir -p $index_path
-	fi
-
 	if [[ -d $log_folder ]]; then
 		:
 	else
@@ -245,8 +239,15 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 
 		if [[ $status -eq 0 ]]; then		## check exit status, let the user know if the installation was successfull
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nApache installation completed successfully, have a nice day!." 8 78
-			Main_Menu
+			--msgbox "\nApache installation completed successfully, have a nice day!." 8 50
+
+			## prompets yes/no and ask the user whether he wants to configure apache
+			if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure Apache?" 8 40); then
+				Web_Server_Configuration
+			else
+				Main_Menu
+			fi
+
 		else
 			whiptail --title "LAMP-On-Demand" \
 			--msgbox "\nSomething went wrong during Apache installation.\nPlease check the log file under $web_install_stderr_log" 8 78
@@ -256,22 +257,29 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 	elif [[ $(cat $tempLAMP) =~ "Nginx" ]]; then
 		if [[ $Distro_Val =~ "centos" ]]; then
 			yum -y install epel-release 2>> $repo_stderr_log >> $repo_stdout_log &
+			status=$?
 			Progress_Bar
-			if [[ $? -eq 0 ]]; then
+			if [[ $status -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nEPEL repo installation complete." 8 78
-				Main_Menu
+				--msgbox "\nEPEL repo installation complete." 8 40
 			else
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nSomething went wrong, EPEL repo installation failed." 8 78
+				--msgbox "\nSomething went wrong, EPEL repo installation failed." 8 50
 				exit 1
 			fi
 
-			yum --enablerepo=epel -y install nginx 2>> $web_install_stderr_log >> $web_install_stdout_log
-			if [[ $? -eq 0 ]]; then
+			yum --enablerepo=epel -y install nginx 2>> $web_install_stderr_log >> $web_install_stdout_log &
+			status=$?
+			Progress_Bar
+			if [[ $status -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nNginx installation completed successfully, have a nice day!." 8 60
-				Main_Menu
+				--msgbox "\nNginx installation completed successfully, have a nice day!." 8 50
+				if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure Nginx?" 8 40); then
+					Web_Server_Configuration
+				else
+					Main_Menu
+				fi
+
 			else
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nSomething went wrong during Nginx installation.\nPlease check the log file under $web_install_stderr_log" 8 78
@@ -286,8 +294,13 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 
 		if [[ $status -eq 0 ]]; then
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nNginx installation completed successfully, have a nice day!." 8 60
-			Main_Menu
+			--msgbox "\nNginx installation completed successfully, have a nice day!." 8 50
+			if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure Nginx?" 8 40); then
+				Web_Server_Configuration
+			else
+				Main_Menu
+			fi
+
 		else
 			whiptail --title "LAMP-On-Demand" \
 			--msgbox "\nSomething went wrong during Nginx installation.\nPlease check the log file under $web_install_stderr_log" 8 78
@@ -299,7 +312,7 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 
 	elif [[ "$(cat $tempLAMP)" =~ "Exit" ]]; then
 		whiptail --title "LAMP-On-Demand" \
-		--msgbox "\nExit - I hope you feel safe now" 8 78
+		--msgbox "\nExit - I hope you feel safe now" 8 40
 		exit 0
 	fi
 	}
