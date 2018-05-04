@@ -261,10 +261,10 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 			Progress_Bar
 			if [[ $status -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nEPEL repo installation complete." 8 35
+				--msgbox "\nEPEL repo installation complete." 8 37
 			else
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nSomething went wrong, EPEL repo installation failed." 8 50
+				--msgbox "\nSomething went wrong, EPEL repo installation failed." 8 57
 				exit 1
 			fi
 
@@ -282,7 +282,7 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 
 			else
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nSomething went wrong during Nginx installation.\nPlease check the log file under $web_install_stderr_log" 8 78
+				--msgbox "\nSomething went wrong during Nginx installation.\nPlease check the log file under:\n$web_install_stderr_log" 10 60
 				exit 1
 			fi
 
@@ -303,7 +303,7 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 
 		else
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nSomething went wrong during Nginx installation.\nPlease check the log file under $web_install_stderr_log" 8 78
+			--msgbox "\nSomething went wrong during Nginx installation.\nPlease check the log file under:\n$web_install_stderr_log" 10 60
 			exit 1
 		fi
 
@@ -312,7 +312,7 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 
 	elif [[ "$(cat $tempLAMP)" =~ "Exit" ]]; then
 		whiptail --title "LAMP-On-Demand" \
-		--msgbox "\nExit - I hope you feel safe now" 8 30
+		--msgbox "\nExit - I hope you feel safe now" 8 37
 		exit 0
 	fi
 	}
@@ -326,7 +326,7 @@ Web_Server_Configuration () {		## start the web server's service
 				:
 			else
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $web_service_stderr_log" 8 78
+				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$web_service_stderr_log" 10 60
 				exit 1
 			fi
 			systemctl restart httpd 2>> $web_service_stderr_log >> $web_service_stdout_log
@@ -336,7 +336,7 @@ Web_Server_Configuration () {		## start the web server's service
 				Main_Menu
 			else
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $web_service_stderr_log" 8 78
+				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$web_service_stderr_log" 10 60
 				exit 1
 			fi
 			systemctl status firewalld |awk '{print $2}' |egrep 'active' &> /dev/null
@@ -366,7 +366,7 @@ Web_Server_Configuration () {		## start the web server's service
 				:
 			else
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $web_service_stderr_log" 8 78
+				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$web_service_stderr_log" 10 60
 				exit 1
 			fi
 			systemctl restart apache2 2>> $web_service_stderr_log >> $web_service_stdout_log
@@ -376,7 +376,7 @@ Web_Server_Configuration () {		## start the web server's service
 				Main_Menu
 			else
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $web_service_stderr_log" 8 78
+				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$web_service_stderr_log" 10 60
 				exit 1
 			fi
 		fi
@@ -388,7 +388,7 @@ Web_Server_Configuration () {		## start the web server's service
 			:
 		else
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $web_service_stderr_log" 8 78
+			--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$web_service_stderr_log" 10 60
 			exit 1
 		fi
 		systemctl restart nginx 2>> $web_service_stderr_log >> $web_service_stdout_log
@@ -398,7 +398,7 @@ Web_Server_Configuration () {		## start the web server's service
 			Main_Menu
 		else
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $web_service_stderr_log" 8 78
+			--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$web_service_stderr_log" 10 60
 			exit 1
 		fi
 
@@ -777,7 +777,7 @@ Lang_Configuration () {
 				--msgbox "\nPHP 7.0 support is up and running!" 8 78
 			else
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $web_service_stderr_log" 8 78
+				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$web_service_stderr_log" 10 60
 				exit 1
 			fi
 
@@ -830,7 +830,7 @@ Lang_Configuration () {
 						--msgbox "\nPHP 7.0 support is up and running!" 8 78
 					else
 						whiptail --title "LAMP-On-Demand" \
-						--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $web_service_stderr_log" 8 78
+						--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$web_service_stderr_log" 10 60
 						exit 1
 					fi
 				else
