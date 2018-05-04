@@ -38,8 +38,8 @@ Log_And_Variables () {		## set log path and variables for installation logs, mak
 	web_install_stdout_log=/var/log/LAMP-On-Demand/websrv_install.log
 	web_service_stderr_log=/var/log/LAMP-On-Demand/Error_websrv_service.log
 	web_service_stdout_log=/var/log/LAMP-On-Demand/websrv_service.log
-	sql_install_stderr_log=/var/log/LAMP-On-Demand/Error_sqlsrv_install.log
-	sql_install_stdout_log=/var/log/LAMP-On-Demand/sqlsrv_install.log
+	db_install_stderr_log=/var/log/LAMP-On-Demand/Error_dbsrv_install.log
+	db_install_stdout_log=/var/log/LAMP-On-Demand/dbsrv_install.log
 	sql_service_stdout_log=/var/log/LAMP-On-Demand/sqlsrv_service.log
 	sql_service_stderr_log=/var/log/LAMP-On-Demand/Error_sqlsrv_service.log
 	lang_install_stderr_log=/var/log/LAMP-On-Demand/Error_lang_install.log
@@ -250,7 +250,7 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 
 		else
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nSomething went wrong during Apache installation.\nPlease check the log file under $web_install_stderr_log" 8 78
+			--msgbox "\nSomething went wrong during Apache installation.\nPlease check the log file under:\n$web_install_stderr_log" 10 60
 			exit 1
 		fi
 
@@ -354,7 +354,7 @@ Web_Server_Configuration () {		## start the web server's service
 					:
 				else
 					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nFailed to reload firewall" 8 30
+					--msgbox "\nFailed to reload firewall.\nPlease check the log file under $firewall_log" 8 78
 					exit 1
 				fi
 			else
@@ -410,7 +410,7 @@ Web_Server_Configuration () {		## start the web server's service
 					:
 				else
 					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nFailed to add HTTP service to firewall rules" 8 40
+					--msgbox "\nFailed to add HTTP service to firewall rules" 8 50
 					exit 1
 				fi
 				firewall-cmd --reload
@@ -418,7 +418,7 @@ Web_Server_Configuration () {		## start the web server's service
 					:
 				else
 					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nFailed to reload firewall" 8 78
+					--msgbox "\nFailed to reload firewall.\nPlease check the log file under $firewall_log" 8 78
 					exit 1
 				fi
 			fi
@@ -437,107 +437,53 @@ DataBase_Installation () {		## choose which data base server would you like to i
 
 	if [[ "$(cat $tempLAMP)" =~ "MariaDB" ]]; then
 		if [[ $Distro_Val =~ "centos" ]]; then
-			yum install mariadb-server mariadb -y 2>> $sql_install_stderr_log >> $sql_install_stdout_log &
-			{
-				i=3
-				while true ;do
-					ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null
-					if [[ $? -eq 0 ]]; then
-						if [[ $i -le 94 ]]; then
-							printf "$i\n"
-							i=$(expr $i + 7)
-							sleep 2.5
-						else
-							:
-						fi
-					else
-						break
-					fi
-				done
-				printf "96\n"
-				sleep 0.5
-				printf "98\n"
-				sleep 0.5
-				printf "100\n"
-				sleep 1
-			} |whiptail --gauge "Please wait while installing..." 6 50 0
+			yum install mariadb-server mariadb -y 2>> $db_install_stderr_log >> $db_install_stdout_log &
+			status=$?
+			Progress_Bar
 		elif [[ $Distro_Val =~ "debian" ]]; then
-			apt-get install mariadb-server mariadb-client -y 2>> $sql_install_stderr_log >> $sql_install_stdout_log
+			apt-get install mariadb-server mariadb-client -y 2>> $db_install_stderr_log >> $db_install_stdout_log &
+			status=$?
+			Progress_Bar
 		fi
 
-		if [[ $? -eq 0 ]]; then
-			printf "$line\n"
-			printf "MariaDB installation completed successfully, have a nice day!\n"
-			printf "$line\n"
+		if [[ $status -eq 0 ]]; then
+			whiptail --title "LAMP-On-Demand" \
+			--msgbox "\nMariaDB installation completed successfully, have a nice day!." 8 65
+			if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure MariaDB?" 8 40); then
+				Web_Server_Configuration
+			else
+				Main_Menu
+			fi
+
 		else
-			printf "$line\n"
-			printf "Something went wrong during MariaDB installation\n"
-			printf "Please check the log file under $sql_install_stderr_log\n"
-			printf "$line\n"
+			whiptail --title "LAMP-On-Demand" \
+			--msgbox "\nSomething went wrong during Apache installation.\nPlease check the log file under:\n$db_install_stderr_log" 10 60
 			exit 1
 		fi
 
 	elif [[ "$(cat $tempLAMP)" =~ "PostgreSQL" ]]; then
 		if [[ $Distro_Val =~ "centos" ]]; then
-			yum install postgresql-server postgresql-contrib -y 2>> $sql_install_stderr_log >> $sql_install_stdout_log &
-			{
-				i=3
-				while true ;do
-					ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null
-					if [[ $? -eq 0 ]]; then
-						if [[ $i -le 94 ]]; then
-							printf "$i\n"
-							i=$(expr $i + 7)
-							sleep 2.5
-						else
-							:
-						fi
-					else
-						break
-					fi
-				done
-				printf "96\n"
-				sleep 0.5
-				printf "98\n"
-				sleep 0.5
-				printf "100\n"
-				sleep 1
-			} |whiptail --gauge "Please wait while installing..." 6 50 0
+			yum install postgresql-server postgresql-contrib -y 2>> $db_install_stderr_log >> $db_install_stdout_log &
+			status=$?
+			Progress_Bar
 		elif [[ $Distro_Val =~ "debian" ]]; then
-			apt-get install postgresql postgresql-contrib -y 2>> $sql_install_stderr_log >> $sql_install_stdout_log &
-			{
-				i=3
-				while true ;do
-					ps aux |egrep -Eo "$!" &> /dev/null
-					if [[ $? -eq 0 ]]; then
-						if [[ $i -le 94 ]]; then
-							printf "$i\n"
-							i=$(expr $i + 7)
-							sleep 2.5
-						else
-							:
-						fi
-					else
-						break
-					fi
-				done
-				printf "96\n"
-				sleep 0.5
-				printf "98\n"
-				sleep 0.5
-				printf "100\n"
-				sleep 1
-			} |whiptail --gauge "Please wait while installing..." 6 50 0
+			apt-get install postgresql postgresql-contrib -y 2>> $db_install_stderr_log >> $db_install_stdout_log &
+			status=$?
+			Progress_Bar
 		fi
-		if [[ $? -eq 0 ]]; then
-			printf "$line\n"
-			printf "PostgreSQL installation completed successfully, have a nice day!\n"
-			printf "$line\n"
+
+		if [[ $status -eq 0 ]]; then
+			whiptail --title "LAMP-On-Demand" \
+			--msgbox "\nMariaDB installation completed successfully, have a nice day!." 8 65
+			if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to set up PostgreSQL?" 8 40); then
+				Web_Server_Configuration
+			else
+				Main_Menu
+			fi
+
 		else
-			printf "$line\n"
-			printf "Something went wrong during PostgreSQL installation\n"
-			printf "Please check the log file under $sql_install_stderr_log\n"
-			printf "$line\n"
+			whiptail --title "LAMP-On-Demand" \
+			--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$db_install_stderr_log" 10 60
 			exit 1
 		fi
 
@@ -546,7 +492,7 @@ DataBase_Installation () {		## choose which data base server would you like to i
 
 	elif [[ "$(cat $tempLAMP)" =~ "Exit" ]]; then
 		whiptail --title "LAMP-On-Demand" \
-		--msgbox "\nExit - I hope you feel safe now." 8 78
+		--msgbox "\nExit - I hope you feel safe now." 8 37
 		exit 0
 	fi
 }
@@ -557,31 +503,27 @@ DataBase_Configuration () {		## configure data base
 		if [[ $? -eq 0 ]]; then
 			:
 		else
-			printf "$line\n"
-			printf "Failed to securly configure mysql server\n"
-			printf "$line\n"
+			whiptail --title "LAMP-On-Demand" \
+			--msgbox "\nFailed to securly configure MariaDB server" 8 50
+			exit 1
 		fi
 
-		systemctl enable mariadb 2>> $sql_service_stderr_log >> $sql_service_stdout_log
+		systemctl enable mariadb 2>> $db_service_stderr_log >> $db_install_stdout_log
 		if [[ $? -eq 0 ]]; then
 			:
 		else
-			printf "$line\n"
-			printf "Something went wrong while enabling the service\n"
-			printf "Please check the log file under $sql_service_stderr_log\n"
-			printf "$line\n"
+			whiptail --title "LAMP-On-Demand" \
+			--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$db_service_stderr_log" 10 60
 			exit 1
 		fi
-		systemctl restart mariadb 2>> $sql_service_stderr_log >> $sql_service_stdout_log
+		systemctl restart mariadb 2>> $db_service_stderr_log >> $db_service_stdout_log
 		if [[ $? -eq 0 ]] ;then
-			printf "$line\n"
-			printf "MariaDB sql server is up and running!"
-			printf "$line\n"
+			whiptail --title "LAMP-On-Demand" \
+			--msgbox "\nApache web server is up and running!" 8 40
+			Main_Menu
 		else
-			printf "$line\n"
-			printf "Something went wrong while enabling the service\n"
-			printf "Please check the log file under $sql_service_stderr_log\n"
-			printf "$line\n"
+			whiptail --title "LAMP-On-Demand" \
+			--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$db_service_stderr_log" 10 60
 			exit 1
 		fi
 
@@ -592,17 +534,17 @@ DataBase_Configuration () {		## configure data base
 				if [[ $? -eq 0 ]]; then
 					:
 				else
-					printf "$line\n"
-					printf "Failed to add MySQL service to firewall rules\n"
-					printf "$line\n"
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nFailed to add MariaDB service to firewall rules.\nPlease check the log file under $firewall_log" 8 78
+					exit 1
 				fi
 				firewall-cmd --reload
 				if [[ $? -eq 0 ]]; then
 					:
 				else
-					printf "$line\n"
-					printf "Failed to reload firewall\n"
-					printf "$line\n"
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nFailed to reload firewall.\nPlease check the log file under $firewall_log" 8 78
+					exit 1
 				fi
 			else
 				:
@@ -612,33 +554,33 @@ DataBase_Configuration () {		## configure data base
 		fi
 
 	elif [[ "$(cat $tempLAMP)" =~ "PostgreSQL" ]]; then
-		systemctl enable postgresql 2>> $sql_service_stderr_log >> $sql_service_stdout_log
+		systemctl enable postgresql 2>> $db_service_stderr_log >> $db_service_stdout_log
 		if [[ $? -eq 0 ]]; then
 			:
 		else
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $sql_service_stderr_log" 8 78
+			--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $db_service_stderr_log" 8 78
 			exit 1
 		fi
-		systemctl restart postgresql 2>> $sql_service_stderr_log >> $sql_service_stdout_log
+		systemctl restart postgresql 2>> $db_service_stderr_log >> $db_service_stdout_log
 		if [[ $? -eq 0 ]]; then
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nPostgresql server is up and running!" 8 78
+			--msgbox "\nPostgresql server is up and running!" 8 40
 			Main_Menu
 		else
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nSomething went wrong while restarting the service.\nPlease check the log file under $sql_service_stderr_log" 8 78
+			--msgbox "\nSomething went wrong while restarting the service.\nPlease check the log file under $db_service_stderr_log" 8 78
 			exit 1
 		fi
 		if [[ $Distro_Val =~ "centos" ]]; then
 			systemctl status firewalld |awk '{print $2}' |egrep 'active' &> /dev/null
 			if [[ $? -eq 0 ]]; then
-				firewall-cmd --add-service=mysql --permanent &> $firewall_log
+				firewall-cmd --add-service=postgresql --permanent &> $firewall_log
 				if [[ $? -eq 0 ]]; then
 					:
 				else
 					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nFailed to add MySQL service to firewall rules.\nPlease check the log file under $firewall_log" 8 78
+					--msgbox "\nFailed to add PostgreSQL service to firewall rules.\nPlease check the log file under $firewall_log" 8 78
 					exit 1
 				fi
 				firewall-cmd --reload
@@ -688,7 +630,7 @@ Lang_Installation () {	## installs language support of user choice
 				--msgbox "\nSomething went wrong, Remi's repo installation failed." 8 78
 				exit 1
 			fi
-			yum --enablerepo=remi-safe -y install php70 php70-php-pear php70-php-mbstring php70-php-fpm 2>> $lang_install_stderr_log >> $sql_install_stdout_log &
+			yum --enablerepo=remi-safe -y install php70 php70-php-pear php70-php-mbstring php70-php-fpm 2>> $lang_install_stderr_log >> $db_install_stdout_log &
 			{
 				i=3
 				while true ;do
@@ -722,7 +664,7 @@ Lang_Installation () {	## installs language support of user choice
 			fi
 
 		elif [[ $Distro_Val =~ "debian" ]]; then
-			apt-get install php7.0 php7.0-mysql libapache2-mod-php7.0 -y 2>> $lang_install_stderr_log >> $sql_install_stdout_log &
+			apt-get install php7.0 php7.0-mysql libapache2-mod-php7.0 -y 2>> $lang_install_stderr_log >> $db_install_stdout_log &
 			{
 				i=3
 				while true ;do
@@ -760,7 +702,7 @@ Lang_Installation () {	## installs language support of user choice
 
 	elif [[ "$(cat $tempLAMP)" =~ "Exit" ]]; then
 		whiptail --title "LAMP-On-Demand" \
-		--msgbox "\nExit - I hope you feel safe now." 8 78
+		--msgbox "\nExit - I hope you feel safe now." 8 37
 		exit 0
 	fi
 }
