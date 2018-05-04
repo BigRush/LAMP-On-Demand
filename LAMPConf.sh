@@ -333,7 +333,6 @@ Web_Server_Configuration () {		## start the web server's service
 			if [[ $? -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nApache web server is up and running!" 8 40
-				Main_Menu
 			else
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$web_service_stderr_log" 10 60
@@ -351,14 +350,14 @@ Web_Server_Configuration () {		## start the web server's service
 				fi
 				firewall-cmd --reload
 				if [[ $? -eq 0 ]]; then
-					:
+					Main_Menu
 				else
 					whiptail --title "LAMP-On-Demand" \
 					--msgbox "\nFailed to reload firewall.\nPlease check the log file under $firewall_log" 8 78
 					exit 1
 				fi
 			else
-				:
+				Main_Menu
 			fi
 		elif [[ $Distro_Val =~ "debian" ]]; then
 			systemctl enable apache2 2>> $web_service_stderr_log >> $web_service_stdout_log
@@ -373,7 +372,6 @@ Web_Server_Configuration () {		## start the web server's service
 			if [[ $? -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nApache web server is up and running!" 8 40
-				Main_Menu
 			else
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$web_service_stderr_log" 10 60
@@ -395,7 +393,6 @@ Web_Server_Configuration () {		## start the web server's service
 		if [[ $? -eq 0 ]] ;then
 			whiptail --title "LAMP-On-Demand" \
 			--msgbox "\nNginx web server is up and running!" 8 40
-			Main_Menu
 		else
 			whiptail --title "LAMP-On-Demand" \
 			--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$web_service_stderr_log" 10 60
@@ -415,13 +412,17 @@ Web_Server_Configuration () {		## start the web server's service
 				fi
 				firewall-cmd --reload
 				if [[ $? -eq 0 ]]; then
-					:
+					Main_Menu
 				else
 					whiptail --title "LAMP-On-Demand" \
 					--msgbox "\nFailed to reload firewall.\nPlease check the log file under $firewall_log" 8 78
 					exit 1
 				fi
+			else
+				Main_Menu
 			fi
+		else
+			Main_Menu
 		fi
 	fi
 }
@@ -519,8 +520,7 @@ DataBase_Configuration () {		## configure data base
 		systemctl restart mariadb 2>> $db_service_stderr_log >> $db_service_stdout_log
 		if [[ $? -eq 0 ]] ;then
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nApache web server is up and running!" 8 40
-			Main_Menu
+			--msgbox "\nMariaDB server is up and running!" 8 40
 		else
 			whiptail --title "LAMP-On-Demand" \
 			--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$db_service_stderr_log" 10 60
@@ -540,17 +540,17 @@ DataBase_Configuration () {		## configure data base
 				fi
 				firewall-cmd --reload
 				if [[ $? -eq 0 ]]; then
-					:
+					Main_Menu
 				else
 					whiptail --title "LAMP-On-Demand" \
 					--msgbox "\nFailed to reload firewall.\nPlease check the log file under $firewall_log" 8 78
 					exit 1
 				fi
 			else
-				:
+				Main_Menu
 			fi
 		else
-			:
+			Main_Menu
 		fi
 
 	elif [[ "$(cat $tempLAMP)" =~ "PostgreSQL" ]]; then
@@ -575,7 +575,6 @@ DataBase_Configuration () {		## configure data base
 		if [[ $? -eq 0 ]]; then
 			whiptail --title "LAMP-On-Demand" \
 			--msgbox "\nPostgresql server is up and running!" 8 40
-			Main_Menu
 		else
 			whiptail --title "LAMP-On-Demand" \
 			--msgbox "\nSomething went wrong while restarting the service.\nPlease check the log file under $db_service_stderr_log" 8 78
@@ -620,7 +619,9 @@ Lang_Installation () {	## installs language support of user choice
 
 	if [[ "$(cat $tempLAMP)" == "PHP 5.4" ]]; then
 		if [[ $Distro_Val =~ "centos" ]]; then
-			yum install php php-mysql php-fpm -y 2>> $lang_install_stderr_log >> $lang_install_stdout_log
+			yum install php php-mysql php-fpm -y 2>> $lang_install_stderr_log >> $lang_install_stdout_log &
+			status=$?
+			Progress_Bar
 		elif [[ $Distro_Val =~ "debian" ]]; then
 			whiptail --title "LAMP-On-Demand" \
 			--msgbox "\nSorry, this script doesn't support php 5.4 installation for Debian." 8 78
