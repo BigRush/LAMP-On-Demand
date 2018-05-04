@@ -272,7 +272,7 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 
 	elif [[ $(cat $tempLAMP) =~ "Nginx" ]]; then
 		if [[ $Distro_Val =~ "centos" ]]; then
-			if [[ $epel_repo -eq 0 ]]; then
+			if [[ $epel_repo -eq 1 ]]; then
 				yum -y install epel-release 2>> $repo_stderr_log >> $repo_stdout_log &
 				status=$?
 				Progress_Bar
@@ -672,7 +672,7 @@ Lang_Installation () {	## installs language support of user choice
 
 	elif [[ "$(cat $tempLAMP)" == "PHP 7.0" ]]; then
 		if [[ $Distro_Val =~ "centos" ]]; then
-			if [[ $remi_repo -eq 0 ]]; then
+			if [[ $remi_repo -eq 1 ]]; then
 				yum -y install http://rpms.famillecollet.com/enterprise/remi-release-7.rpm 2>> $repo_stderr_log >> $repo_stdout_log &
 				status=$?
 				Progress_Bar
@@ -808,16 +808,18 @@ Lang_Configuration () {
 				fi
 
 			else
-				exit 1
+				printf "$line\n"
+				printf "The script does not support PHP 7.0 configuration yet...\n"
+				printf "$line\n"
 			fi
 
 
 
 		elif [[ $Distro_Val =~ "debian" ]]; then
 			printf "$line\n"
-			printf "The script dows not support language configuration for debian at the moment...\n"
+			printf "The script does not support language configuration for debian at the moment...\n"
 			printf "$line\n"
-
+			Main_Menu
 		fi
 	fi
 }
