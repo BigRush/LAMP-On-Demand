@@ -753,7 +753,7 @@ Lang_Configuration () {
 			systemctl status nginx |awk '{print $2}' |egrep 'active' &> /dev/null
 			if [[ $? -eq 0 ]]; then
 				sed -ie 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/' $php_ini_conf 2>> $lang_service_stderr_log
-				sed ie 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm\/php-fpm.sock/' $php_fpm_conf 2>> $lang_service_stderr_log
+				sed -ie 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm\/php-fpm.sock/' $php_fpm_conf 2>> $lang_service_stderr_log
 				sed -ie 's/user = apache/user = nginx/' $php_fpm_conf 2>> $lang_service_stderr_log
 
 				systemctl restart php-fpm 2>> $lang_service_stderr_log
