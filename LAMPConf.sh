@@ -172,18 +172,19 @@ Distro_Check () {		## checking the environment the user is currenttly running on
 }
 
 Repo_Check () { 		## check for existing repositories
-	if [[ -e /etc/yum.repos.d/remi.repo ]]; then
-		remi_repo=0
-	else
-		remi_repo=1
-	fi
+	if [[ $Distro_Val =~ "centos" ]]; then
+		if [[ -e /etc/yum.repos.d/remi.repo ]]; then
+			remi_repo=0
+		else
+			remi_repo=1
+		fi
 
-	if [[ -e /etc/yum.repos.d/epel.repo ]]; then
-		epel_repo=0
-	else
-		epel_repo=1
+		if [[ -e /etc/yum.repos.d/epel.repo ]]; then
+			epel_repo=0
+		else
+			epel_repo=1
+		fi
 	fi
-
 }
 
 Whiptail_Check () {		## checks if whiptail is installed, if it doesn't then install whiptail
@@ -479,7 +480,7 @@ DataBase_Installation () {		## choose which data base server would you like to i
 
 		else
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nSomething went wrong during Apache installation.\nPlease check the log file under:\n$db_install_stderr_log" 10 60
+			--msgbox "\nSomething went wrong during MariaDB installation.\nPlease check the log file under:\n$db_install_stderr_log" 10 60
 			exit 1
 		fi
 
@@ -488,6 +489,7 @@ DataBase_Installation () {		## choose which data base server would you like to i
 			yum install postgresql-server postgresql-contrib -y 2>> $db_install_stderr_log >> $db_install_stdout_log &
 			status=$?
 			Progress_Bar
+
 		elif [[ $Distro_Val =~ "debian" ]]; then
 			apt-get install postgresql postgresql-contrib -y 2>> $db_install_stderr_log >> $db_install_stdout_log &
 			status=$?
@@ -505,7 +507,7 @@ DataBase_Installation () {		## choose which data base server would you like to i
 
 		else
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$db_install_stderr_log" 10 60
+			--msgbox "\nSomething went wrong during PostgreSQL installation.\nPlease check the log file under:\n$db_install_stderr_log" 10 60
 			exit 1
 		fi
 
@@ -658,7 +660,7 @@ Lang_Installation () {	## installs language support of user choice
 
 			else
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nSomething went wrong during PHP 5.4 installation.\nPlease check the log file under:\n$web_install_stderr_log" 10 60
+				--msgbox "\nSomething went wrong during PHP 5.4 installation.\nPlease check the log file under:\n$lang_install_stderr_log" 10 60
 				exit 1
 			fi
 
@@ -676,57 +678,48 @@ Lang_Installation () {	## installs language support of user choice
 				Progress_Bar
 				if [[ $status -eq 0 ]]; then
 					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nRemi's repo installation complete." 8 78
+					--msgbox "\nRemi's repo installation complete." 8 40
 				else
 					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nSomething went wrong, Remi's repo installation failed." 8 78
+					--msgbox "\nSomething went wrong, Remi's repo installation failed." 8 60
 					exit 1
 				fi
 			fi
 
-			yum --enablerepo=remi-safe -y install php70 php70-php-pear php70-php-mbstring php70-php-fpm 2>> $lang_install_stderr_log >> $db_install_stdout_log &
+			yum --enablerepo=remi-safe -y install php70 php70-php-pear php70-php-mbstring php70-php-fpm 2>> $lang_install_stderr_log >> $lang_install_stdout_log &
 			status=$?
 			Progress_Bar
 			if [[ $? -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nPHP 7.0 installation complete." 8 78
+				--msgbox "\nPHP 7.0 installation completed successfully, have a nice day!" 8 70
+				if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure MariaDB?" 8 40); then
+					Lang_Configuration
+				else
+					Main_Menu
+				fi
+
 			else
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nSomething went wrong, PHP 7.0 installation failed." 8 78
+				--msgbox "\nSomething went wrong during PHP 7.0 installation.\nPlease check the log file under:\n$lang_install_stderr_log" 10 60
 				exit 1
 			fi
 
 		elif [[ $Distro_Val =~ "debian" ]]; then
-			apt-get install php7.0 php7.0-mysql libapache2-mod-php7.0 -y 2>> $lang_install_stderr_log >> $db_install_stdout_log &
-			{
-				i=3
-				while true ;do
-					ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null
-					if [[ $? -eq 0 ]]; then
-						if [[ $i -le 94 ]]; then
-							printf "$i\n"
-							i=$(expr $i + 7)
-							sleep 2.5
-						else
-							:
-						fi
-					else
-						break
-					fi
-				done
-				printf "96\n"
-				sleep 0.5
-				printf "98\n"
-				sleep 0.5
-				printf "100\n"
-				sleep 1
-			} |whiptail --gauge "Please wait while installing..." 6 50 0
+			apt-get install php7.0 php7.0-mysql libapache2-mod-php7.0 -y 2>> $lang_install_stderr_log >> $lang_install_stdout_log &
+			status=$?
+			Progress_Bar
 			if [[ $? -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nPHP 7.0 installation complete." 8 78
+				--msgbox "\nPHP 7.0 installation completed successfully, have a nice day!" 8 70
+				if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure MariaDB?" 8 40); then
+					Lang_Configuration
+				else
+					Main_Menu
+				fi
+				
 			else
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nSomething went wrong, Remi's repo installation failed." 8 78
+				--msgbox "\nSomething went wrong during PHP 7.0 installation.\nPlease check the log file under:\n$lang_install_stderr_log" 10 60
 			fi
 		fi
 
@@ -746,10 +739,10 @@ Lang_Configuration () {
 		systemctl status httpd |awk '{print $2}' |egrep 'active' &> /dev/null
 
 		if [[ $? -eq 0 ]]; then
-			systemctl restart httpd 2>> $web_service_stderr_log >> $web_service_stdout_log
+			systemctl restart httpd 2>> $web_service_stderr_log
 			if [[ $? -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nPHP 7.0 support is up and running!" 8 78
+				--msgbox "\nPHP 7.0 support is up and running!" 8 40
 			else
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$web_service_stderr_log" 10 60
@@ -768,18 +761,18 @@ Lang_Configuration () {
 					printf "$nginx_conf_file\n" > $nginx_conf_path		## reconfig nginx to work with php-fpm
 				else
 					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nSomething went wrong while restarting php-fpm service.\nPlease check the log file under $lang_service_stderr_log" 8 78
+					--msgbox "\nSomething went wrong while restarting php-fpm service.\nPlease check the log file under:\n$lang_service_stderr_log" 10 60
 					exit 1
 				fi
 
 				systemctl restart nginx 2>> $web_service_stderr_log
 				if [[ $? -eq 0 ]]; then
 					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nPHP support is up and running!" 8 78
+					--msgbox "\nPHP support is up and running!" 8 40
 					Main_Menu
 				else
 					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nSomething went wrong while restarting nginx service.\nPlease read $web_service_stderr_log and $Error_lang_service" 8 78
+					--msgbox "\nSomething went wrong while restarting nginx service.\nPlease read:\n$web_service_stderr_lognnd:\n$Error_lang_service" 8 60
 					exit 1
 				fi
 
@@ -802,7 +795,7 @@ Lang_Configuration () {
 					systemctl restart httpd 2>> $web_service_stderr_log >> $web_service_stdout_log
 					if [[ $? -eq 0 ]]; then
 						whiptail --title "LAMP-On-Demand" \
-						--msgbox "\nPHP 7.0 support is up and running!" 8 78
+						--msgbox "\nPHP 7.0 support is up and running!" 8 40
 					else
 						whiptail --title "LAMP-On-Demand" \
 						--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$web_service_stderr_log" 10 60
@@ -821,7 +814,9 @@ Lang_Configuration () {
 
 
 		elif [[ $Distro_Val =~ "debian" ]]; then
-			:
+			printf "$line\n"
+			printf "The script dows not support language configuration for debian at the moment...\n"
+			printf "$line\n"
 
 		fi
 	fi
@@ -833,7 +828,25 @@ Main_Menu () {
 	Distro_Check
 	Log_And_Variables
 	Whiptail_Check
+	Repo_Check
 	####function calls####
+
+	if [[ $Distro_Val =~ "centos" ]]; then
+		:
+
+	elif [[ $Distro_Val =~ "debian" ]]; then
+		:
+
+	elif [[ $Distro_Val =~ "arch" ]]; then
+		whiptail --title "LAMP-On-Demand" \
+		--msgbox "\nThe script does not support arch based distribution" 8 55
+		exit 1
+
+	else
+		whiptail --title "LAMP-On-Demand" \
+		--msgbox "\nThe script does not support your distribution" 8 55
+		exit 1
+	fi
 
 	whiptail --title "LAMP-On-Demand" \
 	--menu "Please choose what whould you like to install:" 15 70 5 \
