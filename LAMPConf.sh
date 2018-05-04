@@ -232,16 +232,18 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 			## install apache server, send stderr & stdout to log files
 			## put the process in the background so we could use "$!" (PID of the most recently executed background command) later to get the PID
 			yum install httpd -y 2>> $web_install_stderr_log >> $web_install_stdout_log &
+			status=$?
 			Progress_Bar		## call "Progress_Bar" function
 
 		elif [[ $Distro_Val =~ "debian" ]]; then		## check the user's distribution
 			## install apache server, send stderr & stdout to log files
 			## put the process in the background so we could use "$!" (PID of the most recently executed background command) later to get the PID
 			apt-get install apache2 -y 2>> $web_install_stderr_log >> $web_install_stdout_log &
+			status=$?
 			Progress_Bar		## call "Progress_Bar" function
 		fi
 
-		if [[ $? -eq 0 ]]; then		## check exit status, let the user know if the installation was successfull
+		if [[ $status -eq 0 ]]; then		## check exit status, let the user know if the installation was successfull
 			whiptail --title "LAMP-On-Demand" \
 			--msgbox "\nApache installation completed successfully, have a nice day!." 8 78
 			Main_Menu
@@ -277,11 +279,12 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 			fi
 
 		elif [[ $Distro_Val =~ "debian" ]]; then
-			apt-get install nginx -y 2>> $web_install_stderr_log >> $web_install_stdout_log
+			apt-get install nginx -y 2>> $web_install_stderr_log >> $web_install_stdout_log &
+			status=$?
 			Progress_Bar
 		fi
 
-		if [[ $? -eq 0 ]]; then
+		if [[ $status -eq 0 ]]; then
 			whiptail --title "LAMP-On-Demand" \
 			--msgbox "\nNginx installation completed successfully, have a nice day!." 8 60
 			Main_Menu
@@ -309,22 +312,18 @@ Web_Server_Configuration () {		## start the web server's service
 			if [[ $? -eq 0 ]]; then
 				:
 			else
-				printf "$line\n"
-				printf "Something went wrong while enabling the service\n"
-				printf "Please check the log file under $web_service_stderr_log\n"
-				printf "$line\n"
+				whiptail --title "LAMP-On-Demand" \
+				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $web_service_stderr_log" 8 78
 				exit 1
 			fi
 			systemctl restart httpd 2>> $web_service_stderr_log >> $web_service_stdout_log
 			if [[ $? -eq 0 ]]; then
-				printf "$line\n"
-				printf "Apache web server is up and running!"
-				printf "$line\n"
+				whiptail --title "LAMP-On-Demand" \
+				--msgbox "\nApache web server is up and running!" 8 78
+				Main_Menu
 			else
-				printf "$line\n"
-				printf "Something went wrong while enabling the service\n"
-				printf "Please check the log file under $web_service_stderr_log\n"
-				printf "$line\n"
+				whiptail --title "LAMP-On-Demand" \
+				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $web_service_stderr_log" 8 78
 				exit 1
 			fi
 			systemctl status firewalld |awk '{print $2}' |egrep 'active' &> /dev/null
@@ -333,17 +332,17 @@ Web_Server_Configuration () {		## start the web server's service
 				if [[ $? -eq 0 ]]; then
 					:
 				else
-					printf "$line\n"
-					printf "Failed to add HTTP service to firewall rules\n"
-					printf "$line\n"
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nFailed to add HTTP service to firewall rules" 8 78
+					exit 1
 				fi
 				firewall-cmd --reload
 				if [[ $? -eq 0 ]]; then
 					:
 				else
-					printf "$line\n"
-					printf "Failed to reload firewall\n"
-					printf "$line\n"
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nFailed to reload firewall" 8 78
+					exit 1
 				fi
 			else
 				:
@@ -353,49 +352,43 @@ Web_Server_Configuration () {		## start the web server's service
 			if [[ $? -eq 0 ]]; then
 				:
 			else
-				printf "$line\n"
-				printf "Something went wrong while enabling the service\n"
-				printf "Please check the log file under $web_service_stderr_log\n"
-				printf "$line\n"
+				whiptail --title "LAMP-On-Demand" \
+				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $web_service_stderr_log" 8 78
 				exit 1
 			fi
 			systemctl restart apache2 2>> $web_service_stderr_log >> $web_service_stdout_log
 			if [[ $? -eq 0 ]]; then
-				printf "$line\n"
-				printf "Apache web server is up and running!"
-				printf "$line\n"
+				whiptail --title "LAMP-On-Demand" \
+				--msgbox "\nApache web server is up and running!" 8 78
+				Main_Menu
 			else
-				printf "$line\n"
-				printf "Something went wrong while enabling the service\n"
-				printf "Please check the log file under $web_service_stderr_log\n"
-				printf "$line\n"
+				whiptail --title "LAMP-On-Demand" \
+				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $web_service_stderr_log" 8 78
 				exit 1
 			fi
 		fi
+
 	elif [[ "$(cat $tempLAMP)" =~ "Nginx" ]]; then
 		cat "$my_index_html\n" > $nginx_index_path
 		systemctl enable nginx 2>> $web_service_stderr_log >> $web_service_stdout_log
 		if [[ $? -eq 0 ]] ;then
 			:
 		else
-			printf "$line\n"
-			printf "Something went wrong while enabling the service\n"
-			printf "Please check the log file under $web_service_stderr_log\n"
-			printf "$line\n"
+			whiptail --title "LAMP-On-Demand" \
+			--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $web_service_stderr_log" 8 78
 			exit 1
 		fi
 		systemctl restart nginx 2>> $web_service_stderr_log >> $web_service_stdout_log
 		if [[ $? -eq 0 ]] ;then
-			printf "$line\n"
-			printf "Nginx web server is up and running!"
-			printf "$line\n"
+			whiptail --title "LAMP-On-Demand" \
+			--msgbox "\nNginx web server is up and running!" 8 78
+			Main_Menu
 		else
-			printf "$line\n"
-			printf "Something went wrong while enabling the service\n"
-			printf "Please check the log file under $web_service_stderr_log\n"
-			printf "$line\n"
+			whiptail --title "LAMP-On-Demand" \
+			--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $web_service_stderr_log" 8 78
 			exit 1
 		fi
+
 		if [[ $Distro_Val =~ "centos" ]]; then
 			systemctl status firewalld |awk '{print $2}' |egrep 'active' &> /dev/null
 			if [[ $? -eq 0 ]]; then
@@ -403,23 +396,19 @@ Web_Server_Configuration () {		## start the web server's service
 				if [[ $? -eq 0 ]]; then
 					:
 				else
-					printf "$line\n"
-					printf "Failed to add HTTP service to firewall rules\n"
-					printf "$line\n"
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nFailed to add HTTP service to firewall rules" 8 78
+					exit 1
 				fi
 				firewall-cmd --reload
 				if [[ $? -eq 0 ]]; then
 					:
 				else
-					printf "$line\n"
-					printf "Failed to reload firewall\n"
-					printf "$line\n"
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nFailed to reload firewall" 8 78
+					exit 1
 				fi
-			else
-				:
 			fi
-		else
-			:
 		fi
 	fi
 }
