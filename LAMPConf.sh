@@ -40,8 +40,8 @@ Log_And_Variables () {		## set log path and variables for installation logs, mak
 	web_service_stdout_log=/var/log/LAMP-On-Demand/websrv_service.log
 	db_install_stderr_log=/var/log/LAMP-On-Demand/Error_dbsrv_install.log
 	db_install_stdout_log=/var/log/LAMP-On-Demand/dbsrv_install.log
-	sql_service_stdout_log=/var/log/LAMP-On-Demand/sqlsrv_service.log
-	sql_service_stderr_log=/var/log/LAMP-On-Demand/Error_sqlsrv_service.log
+	db_service_stdout_log=/var/log/LAMP-On-Demand/dbsrv_service.log
+	db_service_stderr_log=/var/log/LAMP-On-Demand/Error_dbsrv_service.log
 	lang_install_stderr_log=/var/log/LAMP-On-Demand/Error_lang_install.log
 	lang_install_stdout_log=/var/log/LAMP-On-Demand/lang_install.log
 	lang_service_stderr_log=/var/log/LAMP-On-Demand/Error_lang_service.log
@@ -508,7 +508,7 @@ DataBase_Configuration () {		## configure data base
 			exit 1
 		fi
 
-		systemctl enable mariadb 2>> $db_service_stderr_log >> $db_install_stdout_log
+		systemctl enable mariadb 2>> $db_service_stderr_log >> $db_service_stderr_log_stdout_log
 		if [[ $? -eq 0 ]]; then
 			:
 		else
@@ -559,7 +559,7 @@ DataBase_Configuration () {		## configure data base
 			:
 		else
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under $db_service_stderr_log" 8 78
+			--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$db_service_stderr_log" 10 60
 			exit 1
 		fi
 		systemctl restart postgresql 2>> $db_service_stderr_log >> $db_service_stdout_log
