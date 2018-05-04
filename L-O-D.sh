@@ -128,20 +128,20 @@ Progress_Bar () {		## progress bar that runs while the installation process is r
 				if [[ $i -le 94 ]]; then
 					printf "$i\n"
 					i=$(expr $i + 7)
-					sleep 2.5
+					sleep 1
 				fi
 			else		## when ps fails to get the process break the loop
 				break
 			fi
 		done
 
-		## when the loop is done print 96%, 98%, and 100%, wait 0.5 second between each and lastly wait 1 second
+		## when the loop is done print 96%, 98%, and 100%, wait 0.5 second between each
 		printf "96\n"
 		sleep 0.5
 		printf "98\n"
 		sleep 0.5
 		printf "100\n"
-		sleep 1
+		sleep 0.5
 	} |whiptail --gauge "Please wait while installing..." 6 50 0
 }
 
@@ -737,12 +737,12 @@ Lang_Configuration () {
 
 	if [[ "$(cat $tempLAMP)" == "PHP 5.4" ]]; then
 		systemctl status httpd |awk '{print $2}' |egrep 'active' &> /dev/null
-
 		if [[ $? -eq 0 ]]; then
 			systemctl restart httpd 2>> $web_service_stderr_log
 			if [[ $? -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nPHP 7.0 support is up and running!" 8 40
+				Main_Menu
 			else
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$web_service_stderr_log" 10 60
