@@ -859,7 +859,7 @@ Main_Menu () {
 		Web_Server_Installation
 	elif [[ "$(cat $tempLAMP)" == "DataBase server" ]]; then
 		DataBase_Installation
-	elif [[ "$(cat $tempLAMP)" == "Language server" ]]; then
+	elif [[ "$(cat $tempLAMP)" == "Language" ]]; then
 		Lang_Installation
 	elif [[ "$(cat $tempLAMP)" == "Exit" ]]; then
 		whiptail --title "LAMP-On-Demand" \
