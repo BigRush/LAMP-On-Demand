@@ -448,7 +448,7 @@ DataBase_Installation () {		## choose which data base server would you like to i
 
 		if [[ $status -eq 0 ]]; then
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nMariaDB installation completed successfully, have a nice day!." 8 70
+			--msgbox "\nMariaDB installation completed successfully, have a nice day!" 8 70
 			if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure MariaDB?" 8 40); then
 				Web_Server_Configuration
 			else
@@ -474,9 +474,9 @@ DataBase_Installation () {		## choose which data base server would you like to i
 
 		if [[ $status -eq 0 ]]; then
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nMariaDB installation completed successfully, have a nice day!." 8 70
+			--msgbox "\nPostgresql installation completed successfully, have a nice day!" 8 70
 			if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to set up PostgreSQL?" 8 40); then
-				Web_Server_Configuration
+				DataBase_Configuration
 			else
 				Main_Menu
 			fi
@@ -554,6 +554,15 @@ DataBase_Configuration () {		## configure data base
 		fi
 
 	elif [[ "$(cat $tempLAMP)" =~ "PostgreSQL" ]]; then
+		postgresql-setup initdb
+		if [[ $? -eq 0 ]]; then
+			:
+		else
+			whiptail --title "LAMP-On-Demand" \
+			--msgbox "\nSomething went wrong while initiating the PostgreSQL DataBase" 9 65
+			exit 1
+		fi
+
 		systemctl enable postgresql 2>> $db_service_stderr_log >> $db_service_stdout_log
 		if [[ $? -eq 0 ]]; then
 			:
@@ -820,7 +829,7 @@ Main_Menu () {
 		Lang_Configuration
 	elif [[ "$(cat $tempLAMP)" == "Exit" ]]; then
 		whiptail --title "LAMP-On-Demand" \
-		--msgbox "\nExit - I hope you feel safe now." 8 78
+		--msgbox "\nExit - I hope you feel safe now." 8 37
 		exit 0
 	fi
 }
