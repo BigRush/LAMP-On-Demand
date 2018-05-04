@@ -448,7 +448,7 @@ DataBase_Installation () {		## choose which data base server would you like to i
 
 		if [[ $status -eq 0 ]]; then
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nMariaDB installation completed successfully, have a nice day!." 8 65
+			--msgbox "\nMariaDB installation completed successfully, have a nice day!." 8 70
 			if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure MariaDB?" 8 40); then
 				Web_Server_Configuration
 			else
@@ -474,7 +474,7 @@ DataBase_Installation () {		## choose which data base server would you like to i
 
 		if [[ $status -eq 0 ]]; then
 			whiptail --title "LAMP-On-Demand" \
-			--msgbox "\nMariaDB installation completed successfully, have a nice day!." 8 65
+			--msgbox "\nMariaDB installation completed successfully, have a nice day!." 8 70
 			if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to set up PostgreSQL?" 8 40); then
 				Web_Server_Configuration
 			else
@@ -508,7 +508,7 @@ DataBase_Configuration () {		## configure data base
 			exit 1
 		fi
 
-		systemctl enable mariadb 2>> $db_service_stderr_log >> $db_service_stderr_log_stdout_log
+		systemctl enable mariadb 2>> $db_service_stderr_log >> $db_service_stdout_log
 		if [[ $? -eq 0 ]]; then
 			:
 		else
