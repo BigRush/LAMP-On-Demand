@@ -51,12 +51,15 @@ Log_And_Variables () {		## set log path and variables for installation logs, mak
 	firewall_log=/var/log/LAMP-On-Demand/firewall.log
 	php_conf=/etc/httpd/conf.d/php.conf
 	php_fpm_conf=/etc/php-fpm.d/www.conf
+	php70_fpm_conf=/etc/opt/remi/php70/php-fpm.d/www.conf
 	php_ini_conf=/etc/php.ini
+	php70_ini_conf=/etc/opt/remi/php70/php.ini
 	log_folder=/var/log/LAMP-On-Demand
 	tempLAMP=$log_folder/LAMP_choise.tmp
-	apache_index_path=/var/www/html/index.html
-	nginx_index_path=/usr/share/nginx/html/index.html
+	apache_index_path=/var/www/html
+	nginx_index_path=/usr/share/nginx/html
 	nginx_conf_path=/etc/nginx/conf.d/default.conf
+	info_php="<?php phpinfo(); ?>"
 	read -r -d '' my_index_html <<- EOF
     <!DOCTYPE html>
     <html>
@@ -80,6 +83,7 @@ Log_And_Variables () {		## set log path and variables for installation logs, mak
       </body>
     </html>
 EOF
+
 	read -r -d '' nginx_conf_file <<- EOF
     server {
       listen       80;
@@ -105,6 +109,33 @@ EOF
         include fastcgi_params;
       }
     }
+EOF
+
+read -r -d '' nginx70_conf_file <<- EOF
+	server {
+		listen       80;
+		server_name  127.0.0.1;
+
+		root   /usr/share/nginx/html;
+		index index.php index.html index.htm;
+
+		location / {
+			try_files \$uri \$uri/ =404;
+		}
+		error_page 404 /404.html;
+		error_page 500 502 503 504 /50x.html;
+		location = /50x.html {
+			root /usr/share/nginx/html;
+		}
+
+		location ~ \.php$ {
+			try_files \$uri =404;
+			fastcgi_pass unix:/var/run/php-fpm/php7.0-fpm.sock;
+			fastcgi_index index.php;
+			fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+			include fastcgi_params;
+		}
+	}
 EOF
 	####Variables####
 
@@ -337,7 +368,7 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 
 Web_Server_Configuration () {		## start the web server's service
 	if [[ "$(cat $tempLAMP)" =~ "Apache" ]]; then
-		printf "$my_index_html\n" > $apache_index_path
+		printf "$my_index_html\n" > $apache_index_path/index.html
 		if [[ $Distro_Val =~ "centos" ]]; then
 			systemctl enable httpd 2>> $web_service_stderr_log >> $web_service_stdout_log
 			if [[ $? -eq 0 ]]; then
@@ -400,7 +431,7 @@ Web_Server_Configuration () {		## start the web server's service
 		fi
 
 	elif [[ "$(cat $tempLAMP)" =~ "Nginx" ]]; then
-		printf "$my_index_html\n" > $nginx_index_path
+		printf "$my_index_html\n" > $nginx_index_path/index.html
 		systemctl enable nginx 2>> $web_service_stderr_log >> $web_service_stdout_log
 		if [[ $? -eq 0 ]] ;then
 			:
@@ -738,6 +769,7 @@ Lang_Configuration () {
 	if [[ "$(cat $tempLAMP)" == "PHP 5.4" ]]; then
 		systemctl status httpd |awk '{print $2}' |egrep 'active' &> /dev/null
 		if [[ $? -eq 0 ]]; then
+			printf "$info_php\n" > $nginx_index_path/info.php
 			systemctl restart httpd 2>> $web_service_stderr_log
 			if [[ $? -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
@@ -782,6 +814,7 @@ Lang_Configuration () {
 					exit 1
 				fi
 
+				printf "$info_php\n" > $nginx_index_path/info.php
 				systemctl restart nginx 2>> $web_service_stderr_log
 				if [[ $? -eq 0 ]]; then
 					whiptail --title "LAMP-On-Demand" \
@@ -834,30 +867,30 @@ Lang_Configuration () {
 		else
 			systemctl status nginx |awk '{print $2}' |egrep 'active' &> /dev/null
 			if [[ $? -eq 0 ]]; then
-				sed -ie 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/' $php_ini_conf 2>> $lang_service_stderr_log
+				sed -ie 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/' $php70_ini_conf 2>> $lang_service_stderr_log
 				if [[ $? -ne 0 ]]; then
 					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nThere was a problem with sed command or the \"$php_fpm_conf\" file doesn't exists" 8 78
+					--msgbox "\nThere was a problem with sed command or the \"$php70_fpm_conf\" file doesn't exists" 8 78
 					exit 1
 				fi
 
-				sed -ie 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm\/php-fpm.sock/' $php_fpm_conf 2>> $lang_service_stderr_log
+				sed -ie 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm\/php7.0-fpm.sock/' $php70_fpm_conf 2>> $lang_service_stderr_log
 				if [[ $? -ne 0 ]]; then
 					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nThere was a problem with sed command or the \"$php_fpm_conf\" file doesn't exists" 8 78
+					--msgbox "\nThere was a problem with sed command or the \"$php70_fpm_conf\" file doesn't exists" 8 78
 					exit 1
 				fi
 
-				sed -ie 's/user = apache/user = nginx/' $php_fpm_conf 2>> $lang_service_stderr_log
+				sed -ie 's/user = apache/user = nginx/' $php70_fpm_conf 2>> $lang_service_stderr_log
 				if [[ $? -ne 0 ]]; then
 					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nThere was a problem with sed command or the \"$php_fpm_conf\" file doesn't exists" 8 78
+					--msgbox "\nThere was a problem with sed command or the \"$php70_fpm_conf\" file doesn't exists" 8 78
 					exit 1
 				fi
 
 				systemctl restart php70-php-fpm 2>> $lang_service_stderr_log
 				if [[ $? -eq 0 ]]; then
-					printf "$nginx_conf_file\n" > $nginx_conf_path		## reconfig nginx to work with php-fpm
+					printf "$nginx70_conf_file\n" > $nginx_conf_path		## reconfig nginx to work with php-fpm
 				else
 					whiptail --title "LAMP-On-Demand" \
 					--msgbox "\nSomething went wrong while restarting php-fpm service.\nPlease check the log file under:\n$lang_service_stderr_log" 10 60
