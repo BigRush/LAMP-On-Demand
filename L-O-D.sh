@@ -804,38 +804,90 @@ Lang_Configuration () {
 
 
 	elif [[ "$(cat $tempLAMP)" == "PHP 7.0" ]]; then
-		if [[ $Distro_Val =~ "centos" ]]; then
-			systemctl status httpd |awk '{print $2}' |egrep 'active' &> /dev/null
+		systemctl status httpd |awk '{print $2}' |egrep 'active' &> /dev/null
+		if [[ $? -eq 0 ]]; then
+			sed -ie 's/SetHandler.*/SetHandler \"proxy:fcgi:\/\/127.0.0.1:9000\"/' $php_conf 2>> $lang_service_stderr_log
 			if [[ $? -eq 0 ]]; then
-				sed -ie 's/SetHandler.*/SetHandler \"proxy:fcgi:\/\/127.0.0.1:9000\"/' $php_conf 2>> $lang_service_stderr_log
-				if [[ $? -eq 0 ]]; then
-					systemctl restart php70-php-fpm 2>> $lang_service_stderr_log >> $lang_service_stdout_log
-					if [[ $? -ne 0 ]]; then
-						whiptail --title "LAMP-On-Demand" \
-						--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$lang_service_stderr_log" 10 60
-						exit 1
-					fi
+				systemctl restart php70-php-fpm 2>> $lang_service_stderr_log >> $lang_service_stdout_log
+				if [[ $? -ne 0 ]]; then
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$lang_service_stderr_log" 10 60
+					exit 1
+				fi
 
-					systemctl restart httpd 2>> $web_service_stderr_log >> $web_service_stdout_log
-					if [[ $? -eq 0 ]]; then
-						whiptail --title "LAMP-On-Demand" \
-						--msgbox "\nPHP 7.0 support is up and running!" 8 40
-					else
-						whiptail --title "LAMP-On-Demand" \
-						--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$web_service_stderr_log" 10 60
-						exit 1
-					fi
+				systemctl restart httpd 2>> $web_service_stderr_log >> $web_service_stdout_log
+				if [[ $? -eq 0 ]]; then
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nPHP 7.0 support is up and running!" 8 40
 				else
 					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nThere was a problem with sed command or the \"$php_conf\" file doesn't exists" 8 78
+					--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$web_service_stderr_log" 10 60
+					exit 1
+				fi
+			else
+				whiptail --title "LAMP-On-Demand" \
+				--msgbox "\nThere was a problem with sed command or the \"$php_conf\" file doesn't exists" 8 78
+				exit 1
+			fi
+
+
+		else
+			systemctl status nginx |awk '{print $2}' |egrep 'active' &> /dev/null
+			if [[ $? -eq 0 ]]; then
+				sed -ie 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/' $php_ini_conf 2>> $lang_service_stderr_log
+				if [[ $? -ne 0 ]]; then
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nThere was a problem with sed command or the \"$php_fpm_conf\" file doesn't exists" 8 78
+					exit 1
+				fi
+
+				sed -ie 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm\/php-fpm.sock/' $php_fpm_conf 2>> $lang_service_stderr_log
+				if [[ $? -ne 0 ]]; then
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nThere was a problem with sed command or the \"$php_fpm_conf\" file doesn't exists" 8 78
+					exit 1
+				fi
+
+				sed -ie 's/user = apache/user = nginx/' $php_fpm_conf 2>> $lang_service_stderr_log
+				if [[ $? -ne 0 ]]; then
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nThere was a problem with sed command or the \"$php_fpm_conf\" file doesn't exists" 8 78
+					exit 1
+				fi
+
+				systemctl restart php70-php-fpm 2>> $lang_service_stderr_log
+				if [[ $? -eq 0 ]]; then
+					printf "$nginx_conf_file\n" > $nginx_conf_path		## reconfig nginx to work with php-fpm
+				else
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nSomething went wrong while restarting php-fpm service.\nPlease check the log file under:\n$lang_service_stderr_log" 10 60
+					exit 1
+				fi
+
+				systemctl restart nginx 2>> $web_service_stderr_log
+				if [[ $? -eq 0 ]]; then
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nPHP support is up and running!" 8 40
+					Main_Menu
+				else
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nSomething went wrong while restarting nginx service.\nPlease read:\n$web_service_stderr_log\nand:\n$Error_lang_service" 10 60
 					exit 1
 				fi
 
 			else
-				printf "$line\n"
-				printf "The script does not support PHP 7.0 configuration yet...\n"
-				printf "$line\n"
+				whiptail --title "LAMP-On-Demand" \
+				--msgbox "\nCould not detect a running web server, please make sure apache or nginx is running." 8 78
+				exit 1
 			fi
+		fi
+<<testing
+		else
+			printf "$line\n"
+			printf "The script does not support PHP 7.0 configuration yet...\n"
+			printf "$line\n"
+		fi
+
 
 
 
@@ -845,7 +897,8 @@ Lang_Configuration () {
 			printf "$line\n"
 			Main_Menu
 		fi
-	fi
+testing
+		fi
 }
 
 Main_Menu () {
