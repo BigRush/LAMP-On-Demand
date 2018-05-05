@@ -753,28 +753,31 @@ Lang_Configuration () {
 			systemctl status nginx |awk '{print $2}' |egrep 'active' &> /dev/null
 			if [[ $? -eq 0 ]]; then
 				sed -ie 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/' $php_ini_conf 2>> $lang_service_stderr_log
-				if [[ $? -eq 0 ]]; then
-					sed -ie 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm\/php-fpm.sock/' $php_fpm_conf 2>> $lang_service_stderr_log
-					if [[ $? -eq 0 ]]; then
-						sed -ie 's/user = apache/user = nginx/' $php_fpm_conf 2>> $lang_service_stderr_log
-						if [[ $? -ne 0 ]]; then
-						else
-							whiptail --title "LAMP-On-Demand" \
-							--msgbox "\nThere was a problem with sed command or the \"$php_fpm_conf\" file doesn't exists" 8 78
-							exit 1
-						fi
+				if [[ $? -ne 0 ]]; then
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nThere was a problem with sed command or the \"$php_fpm_conf\" file doesn't exists" 8 78
+					exit 1
+				fi
+
+				sed -ie 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm\/php-fpm.sock/' $php_fpm_conf 2>> $lang_service_stderr_log
+				if [[ $? -ne 0 ]]; then
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nThere was a problem with sed command or the \"$php_fpm_conf\" file doesn't exists" 8 78
+					exit 1
+				fi
+
+				sed -ie 's/user = apache/user = nginx/' $php_fpm_conf 2>> $lang_service_stderr_log
+				if [[ $? -ne 0 ]]; then
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nThere was a problem with sed command or the \"$php_fpm_conf\" file doesn't exists" 8 78
+					exit 1
+				fi
 
 				else
 					whiptail --title "LAMP-On-Demand" \
 					--msgbox "\nThere was a problem with sed command or the \"$php_fpm_conf\" file doesn't exists" 8 78
 					exit 1
 				fi
-
-			else
-				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nThere was a problem with sed command or the \"$php_ini_conf\" file doesn't exists" 8 78
-				exit 1
-			fi
 
 				systemctl restart php-fpm 2>> $lang_service_stderr_log
 				if [[ $? -eq 0 ]]; then
