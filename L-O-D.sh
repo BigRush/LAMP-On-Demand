@@ -773,12 +773,6 @@ Lang_Configuration () {
 					exit 1
 				fi
 
-				else
-					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nThere was a problem with sed command or the \"$php_fpm_conf\" file doesn't exists" 8 78
-					exit 1
-				fi
-
 				systemctl restart php-fpm 2>> $lang_service_stderr_log
 				if [[ $? -eq 0 ]]; then
 					printf "$nginx_conf_file\n" > $nginx_conf_path		## reconfig nginx to work with php-fpm
