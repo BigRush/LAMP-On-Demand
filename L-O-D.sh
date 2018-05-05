@@ -741,7 +741,7 @@ Lang_Configuration () {
 			systemctl restart httpd 2>> $web_service_stderr_log
 			if [[ $? -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
-				--msgbox "\nPHP 7.0 support is up and running!" 8 40
+				--msgbox "\nPHP 5.4 support is up and running!" 8 40
 				Main_Menu
 			else
 				whiptail --title "LAMP-On-Demand" \
@@ -809,6 +809,13 @@ Lang_Configuration () {
 			if [[ $? -eq 0 ]]; then
 				sed -ie 's/SetHandler.*/SetHandler \"proxy:fcgi:\/\/127.0.0.1:9000\"/' $php_conf 2>> $lang_service_stderr_log
 				if [[ $? -eq 0 ]]; then
+					systemctl restart php70-php-fpm 2>> $lang_service_stderr_log >> $lang_service_stdout_log
+					if [[ $? -ne 0 ]]; then
+						whiptail --title "LAMP-On-Demand" \
+						--msgbox "\nSomething went wrong while enabling the service.\nPlease check the log file under:\n$lang_service_stderr_log" 10 60
+						exit 1
+					fi
+
 					systemctl restart httpd 2>> $web_service_stderr_log >> $web_service_stdout_log
 					if [[ $? -eq 0 ]]; then
 						whiptail --title "LAMP-On-Demand" \
