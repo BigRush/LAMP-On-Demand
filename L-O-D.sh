@@ -753,8 +753,28 @@ Lang_Configuration () {
 			systemctl status nginx |awk '{print $2}' |egrep 'active' &> /dev/null
 			if [[ $? -eq 0 ]]; then
 				sed -ie 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/' $php_ini_conf 2>> $lang_service_stderr_log
-				sed -ie 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm\/php-fpm.sock/' $php_fpm_conf 2>> $lang_service_stderr_log
-				sed -ie 's/user = apache/user = nginx/' $php_fpm_conf 2>> $lang_service_stderr_log
+				if [[ $? -eq 0 ]]; then
+					sed -ie 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm\/php-fpm.sock/' $php_fpm_conf 2>> $lang_service_stderr_log
+					if [[ $? -eq 0 ]]; then
+						sed -ie 's/user = apache/user = nginx/' $php_fpm_conf 2>> $lang_service_stderr_log
+						if [[ $? -ne 0 ]]; then
+						else
+							whiptail --title "LAMP-On-Demand" \
+							--msgbox "\nThere was a problem with sed command or the \"$php_fpm_conf\" file doesn't exists" 8 78
+							exit 1
+						fi
+
+				else
+					whiptail --title "LAMP-On-Demand" \
+					--msgbox "\nThere was a problem with sed command or the \"$php_fpm_conf\" file doesn't exists" 8 78
+					exit 1
+				fi
+
+			else
+				whiptail --title "LAMP-On-Demand" \
+				--msgbox "\nThere was a problem with sed command or the \"$php_ini_conf\" file doesn't exists" 8 78
+				exit 1
+			fi
 
 				systemctl restart php-fpm 2>> $lang_service_stderr_log
 				if [[ $? -eq 0 ]]; then
@@ -790,7 +810,7 @@ Lang_Configuration () {
 		if [[ $Distro_Val =~ "centos" ]]; then
 			systemctl status httpd |awk '{print $2}' |egrep 'active' &> /dev/null
 			if [[ $? -eq 0 ]]; then
-				sed -ie 's/SetHandler.*/SetHandler \"proxy:fcgi://127.0.0.1:9000\"/' $php_conf
+				sed -ie 's/SetHandler.*/SetHandler \"proxy:fcgi:\/\/127.0.0.1:9000\"/' $php_conf 2>> $lang_service_stderr_log
 				if [[ $? -eq 0 ]]; then
 					systemctl restart httpd 2>> $web_service_stderr_log >> $web_service_stdout_log
 					if [[ $? -eq 0 ]]; then
@@ -803,7 +823,7 @@ Lang_Configuration () {
 					fi
 				else
 					whiptail --title "LAMP-On-Demand" \
-					--msgbox "\nThere was a problem with sed command or the \"php.conf\" file doesn't exists" 8 78
+					--msgbox "\nThere was a problem with sed command or the \"$php_conf\" file doesn't exists" 8 78
 					exit 1
 				fi
 
