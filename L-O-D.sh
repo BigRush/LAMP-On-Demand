@@ -504,7 +504,7 @@ DataBase_Installation () {		## choose which data base server would you like to i
 			whiptail --title "LAMP-On-Demand" \
 			--msgbox "\nMariaDB installation completed successfully, have a nice day!" 8 70
 			if (whiptail --title "LAMP-On-Demand" --yesno "Would you like to configure MariaDB?" 8 40); then
-				Web_Server_Configuration
+				DataBase_Configuration
 			else
 				Main_Menu
 			fi
@@ -769,7 +769,7 @@ Lang_Configuration () {
 	if [[ "$(cat $tempLAMP)" == "PHP 5.4" ]]; then
 		systemctl status httpd |awk '{print $2}' |egrep 'active' &> /dev/null
 		if [[ $? -eq 0 ]]; then
-			printf "$info_php\n" > $nginx_index_path/info.php
+			printf "$info_php\n" > $apache_index_path/info.php
 			systemctl restart httpd 2>> $web_service_stderr_log
 			if [[ $? -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
