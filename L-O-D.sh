@@ -151,7 +151,7 @@ Progress_Bar () {		## progress bar that runs while the installation process is r
 	{
 		i=3		## i represents the completion percentage, the progress bar will start at 3%
 		while true ;do		## endless loop
-			ps aux |awk '{print $2}' |egrep -Eo "$!" &> /dev/null		## checks if our process is still alive by checking if his PID shows in ps command
+			ps aux |awk '{print $2}' |egrep -Eo "$BPID" &> /dev/null		## checks if our process is still alive by checking if his PID shows in ps command
 			if [[ $? -eq 0 ]]; then		## checks exit status of last command, if succeed
 
 				## make sure that if our process takes a long time that the percentage will not exceed 94%
@@ -273,15 +273,20 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 			## install apache server, send stderr & stdout to log files
 			## put the process in the background so we could use "$!" (PID of the most recently executed background command) later to get the PID
 			yum install httpd -y 2>> $web_install_stderr_log >> $web_install_stdout_log &
-			status=$?
+			BPID=$!				## put the last background command's PID in a variable
 			Progress_Bar		## call "Progress_Bar" function
-
+			wait $BPID			## wait until the proccess is done
+			status=$? 			## check the proccess exit status
+			
 		elif [[ $Distro_Val =~ "debian" ]]; then		## check the user's distribution
 			## install apache server, send stderr & stdout to log files
 			## put the process in the background so we could use "$!" (PID of the most recently executed background command) later to get the PID
 			apt-get install apache2 -y 2>> $web_install_stderr_log >> $web_install_stdout_log &
-			status=$?
+			BPID=$!				## put the last background command's PID in a variable
 			Progress_Bar		## call "Progress_Bar" function
+			wait $BPID			## wait until the proccess is done
+			status=$? 			## check the proccess exit status
+
 		fi
 
 		if [[ $status -eq 0 ]]; then		## check exit status, let the user know if the installation was successfull
@@ -305,8 +310,11 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 		if [[ $Distro_Val =~ "centos" ]]; then
 			if [[ $epel_repo -eq 1 ]]; then
 				yum -y install epel-release 2>> $repo_stderr_log >> $repo_stdout_log &
-				status=$?
-				Progress_Bar
+				BPID=$!				## put the last background command's PID in a variable
+				Progress_Bar		## call "Progress_Bar" function
+				wait $BPID			## wait until the proccess is done
+				status=$? 			## check the proccess exit status
+
 				if [[ $status -eq 0 ]]; then
 					whiptail --title "LAMP-On-Demand" \
 					--msgbox "\nEPEL repo installation complete." 8 37
@@ -318,8 +326,11 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 			fi
 
 			yum --enablerepo=epel -y install nginx 2>> $web_install_stderr_log >> $web_install_stdout_log &
-			status=$?
-			Progress_Bar
+			BPID=$!				## put the last background command's PID in a variable
+			Progress_Bar		## call "Progress_Bar" function
+			wait $BPID			## wait until the proccess is done
+			status=$? 			## check the proccess exit status
+
 			if [[ $status -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nNginx installation completed successfully, have a nice day!" 8 65
@@ -337,8 +348,11 @@ Web_Server_Installation () {		## choose which web server would you like to insta
 
 		elif [[ $Distro_Val =~ "debian" ]]; then
 			apt-get install nginx -y 2>> $web_install_stderr_log >> $web_install_stdout_log &
-			status=$?
-			Progress_Bar
+			BPID=$!				## put the last background command's PID in a variable
+			Progress_Bar		## call "Progress_Bar" function
+			wait $BPID			## wait until the proccess is done
+			status=$? 			## check the proccess exit status
+
 		fi
 
 		if [[ $status -eq 0 ]]; then
@@ -492,12 +506,18 @@ DataBase_Installation () {		## choose which data base server would you like to i
 	if [[ "$(cat $tempLAMP)" =~ "MariaDB" ]]; then
 		if [[ $Distro_Val =~ "centos" ]]; then
 			yum install mariadb-server mariadb -y 2>> $db_install_stderr_log >> $db_install_stdout_log &
-			status=$?
-			Progress_Bar
+			BPID=$!				## put the last background command's PID in a variable
+			Progress_Bar		## call "Progress_Bar" function
+			wait $BPID			## wait until the proccess is done
+			status=$? 			## check the proccess exit status
+
 		elif [[ $Distro_Val =~ "debian" ]]; then
 			apt-get install mariadb-server mariadb-client -y 2>> $db_install_stderr_log >> $db_install_stdout_log &
-			status=$?
-			Progress_Bar
+			BPID=$!				## put the last background command's PID in a variable
+			Progress_Bar		## call "Progress_Bar" function
+			wait $BPID			## wait until the proccess is done
+			status=$? 			## check the proccess exit status
+
 		fi
 
 		if [[ $status -eq 0 ]]; then
@@ -518,13 +538,19 @@ DataBase_Installation () {		## choose which data base server would you like to i
 	elif [[ "$(cat $tempLAMP)" =~ "PostgreSQL" ]]; then
 		if [[ $Distro_Val =~ "centos" ]]; then
 			yum install postgresql-server postgresql-contrib -y 2>> $db_install_stderr_log >> $db_install_stdout_log &
-			status=$?
-			Progress_Bar
+			BPID=$!				## put the last background command's PID in a variable
+			Progress_Bar		## call "Progress_Bar" function
+			wait $BPID			## wait until the proccess is done
+			status=$? 			## check the proccess exit status
+
 
 		elif [[ $Distro_Val =~ "debian" ]]; then
 			apt-get install postgresql postgresql-contrib -y 2>> $db_install_stderr_log >> $db_install_stdout_log &
-			status=$?
-			Progress_Bar
+			BPID=$!				## put the last background command's PID in a variable
+			Progress_Bar		## call "Progress_Bar" function
+			wait $BPID			## wait until the proccess is done
+			status=$? 			## check the proccess exit status
+
 		fi
 
 		if [[ $status -eq 0 ]]; then
@@ -678,8 +704,11 @@ Lang_Installation () {	## installs language support of user choice
 	if [[ "$(cat $tempLAMP)" == "PHP 5.4" ]]; then
 		if [[ $Distro_Val =~ "centos" ]]; then
 			yum install php php-mysql php-fpm -y 2>> $lang_install_stderr_log >> $lang_install_stdout_log &
-			status=$?
-			Progress_Bar
+			BPID=$!				## put the last background command's PID in a variable
+			Progress_Bar		## call "Progress_Bar" function
+			wait $BPID			## wait until the proccess is done
+			status=$? 			## check the proccess exit status
+
 			if [[ $status -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nPHP 5.4 installation completed successfully, have a nice day!" 8 70
@@ -705,8 +734,11 @@ Lang_Installation () {	## installs language support of user choice
 		if [[ $Distro_Val =~ "centos" ]]; then
 			if [[ $remi_repo -eq 1 ]]; then
 				yum -y install http://rpms.famillecollet.com/enterprise/remi-release-7.rpm 2>> $repo_stderr_log >> $repo_stdout_log &
-				status=$?
-				Progress_Bar
+				BPID=$!				## put the last background command's PID in a variable
+				Progress_Bar		## call "Progress_Bar" function
+				wait $BPID			## wait until the proccess is done
+				status=$? 			## check the proccess exit status
+
 				if [[ $status -eq 0 ]]; then
 					whiptail --title "LAMP-On-Demand" \
 					--msgbox "\nRemi's repo installation complete." 8 40
@@ -718,8 +750,11 @@ Lang_Installation () {	## installs language support of user choice
 			fi
 
 			yum --enablerepo=remi-safe -y install php70 php70-php-pear php70-php-mbstring php70-php-fpm 2>> $lang_install_stderr_log >> $lang_install_stdout_log &
-			status=$?
-			Progress_Bar
+			BPID=$!				## put the last background command's PID in a variable
+			Progress_Bar		## call "Progress_Bar" function
+			wait $BPID			## wait until the proccess is done
+			status=$? 			## check the proccess exit status
+
 			if [[ $? -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nPHP 7.0 installation completed successfully, have a nice day!" 8 70
@@ -737,8 +772,11 @@ Lang_Installation () {	## installs language support of user choice
 
 		elif [[ $Distro_Val =~ "debian" ]]; then
 			apt-get install php7.0 php7.0-mysql libapache2-mod-php7.0 -y 2>> $lang_install_stderr_log >> $lang_install_stdout_log &
-			status=$?
-			Progress_Bar
+			BPID=$!				## put the last background command's PID in a variable
+			Progress_Bar		## call "Progress_Bar" function
+			wait $BPID			## wait until the proccess is done
+			status=$? 			## check the proccess exit status
+
 			if [[ $? -eq 0 ]]; then
 				whiptail --title "LAMP-On-Demand" \
 				--msgbox "\nPHP 7.0 installation completed successfully, have a nice day!" 8 70
