@@ -52,3 +52,8 @@ bash L-O-D.sh
 ## License
 
 This project is licensed under the GPLv3 License - see the [LICENSE](https://github.com/chn555/timestamp/blob/master/LICENSE) file for details
+
+## Acknowledgments
+
+Thanks to [silent-mobius](https://github.com/silent-mobius) for giving the idea and mentoring me through the process.
+
